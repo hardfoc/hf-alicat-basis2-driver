@@ -12,15 +12,15 @@ This branch contains the versioned documentation for this repository.
 
 ## Access
 
-- **Latest**: [https://N3b3x.github.io/hf-alicat-basis2-driver/](https://N3b3x.github.io/hf-alicat-basis2-driver/)
-- **All Versions**: [https://N3b3x.github.io/hf-alicat-basis2-driver/version_selector.html](https://N3b3x.github.io/hf-alicat-basis2-driver/version_selector.html)
+- **Latest**: [https://hardfoc.github.io/hf-alicat-basis2-driver/](https://hardfoc.github.io/hf-alicat-basis2-driver/)
+- **All Versions**: [https://hardfoc.github.io/hf-alicat-basis2-driver/version_selector.html](https://hardfoc.github.io/hf-alicat-basis2-driver/version_selector.html)
 
 ## Current Version
 
 - **Version**: development
 - **Type**: development
-- **Deployed**: 2026-04-28T21:55:56Z
-- **Commit**: a28bd15f572ffab0d32d4326b10515b13b009244
+- **Deployed**: 2026-10-31T08:19:40Z
+- **Commit**: c9d79e65cf4dc5e524fcd57738be80384560dd32
 
 ---
 
