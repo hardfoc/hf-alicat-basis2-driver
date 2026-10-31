@@ -51,7 +51,7 @@ hf-alicat-basis2-driver/
 ## Vendoring as a Git submodule (recommended)
 
 ```bash
-git submodule add https://github.com/N3b3x/hf-alicat-basis2-driver.git \
+git submodule add https://github.com/hardfoc/hf-alicat-basis2-driver.git \
     third_party/hf-alicat-basis2-driver
 ```
 

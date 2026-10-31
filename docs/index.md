@@ -10,9 +10,9 @@ has_children: true
 
 # HF-Alicat-BASIS2 documentation
 
-Welcome. This site mirrors the [`docs/`](https://github.com/N3b3x/hf-alicat-basis2-driver/tree/main/docs) folder in the repository and adds navigation, search, and diagrams for the **Alicat BASIS-2** mass-flow meter / controller (B-Series and BC-Series) driver.
+Welcome. This site mirrors the [`docs/`](https://github.com/hardfoc/hf-alicat-basis2-driver/tree/main/docs) folder in the repository and adds navigation, search, and diagrams for the **Alicat BASIS-2** mass-flow meter / controller (B-Series and BC-Series) driver.
 
-> **Browse on GitHub:** [repository home](https://github.com/N3b3x/hf-alicat-basis2-driver) · [Issues](https://github.com/N3b3x/hf-alicat-basis2-driver/issues)
+> **Browse on GitHub:** [repository home](https://github.com/hardfoc/hf-alicat-basis2-driver) · [Issues](https://github.com/hardfoc/hf-alicat-basis2-driver/issues)
 
 ## Documentation structure
 
@@ -65,6 +65,6 @@ Welcome. This site mirrors the [`docs/`](https://github.com/N3b3x/hf-alicat-basi
 
 - **Build or flash issues:** [Troubleshooting](troubleshooting.md) and [Examples](examples.md)
 - **Bus / wiring:** [Hardware setup](hardware_setup.md)
-- **API details:** [API reference](api_reference.md) and the headers in [`inc/`](https://github.com/N3b3x/hf-alicat-basis2-driver/tree/main/inc) on GitHub
+- **API details:** [API reference](api_reference.md) and the headers in [`inc/`](https://github.com/hardfoc/hf-alicat-basis2-driver/tree/main/inc) on GitHub
 
 **Next:** [Installation →](installation.md)

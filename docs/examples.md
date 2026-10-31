@@ -21,7 +21,7 @@ at the top of the source file for your wiring.
 
 ## Build with the project tools (recommended)
 
-The example tree includes the [`hf-espidf-project-tools`](https://github.com/N3b3x/hf-espidf-project-tools)
+The example tree includes the [`hf-espidf-project-tools`](https://github.com/hardfoc/hf-espidf-project-tools)
 submodule under `examples/esp32/scripts/`:
 
 ```bash
