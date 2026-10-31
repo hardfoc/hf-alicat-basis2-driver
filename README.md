@@ -12,8 +12,8 @@ permalink: /
 
 [![C++](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/N3b3x/hf-alicat-basis2-driver/actions/workflows/esp32-examples-build-ci.yml/badge.svg?branch=main)](https://github.com/N3b3x/hf-alicat-basis2-driver/actions/workflows/esp32-examples-build-ci.yml)
-[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://n3b3x.github.io/hf-alicat-basis2-driver/)
+[![CI](https://github.com/hardfoc/hf-alicat-basis2-driver/actions/workflows/esp32-examples-build-ci.yml/badge.svg?branch=main)](https://github.com/hardfoc/hf-alicat-basis2-driver/actions/workflows/esp32-examples-build-ci.yml)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://hardfoc.github.io/hf-alicat-basis2-driver/)
 
 ## 📚 Table of Contents
 1. [Overview](#-overview)
@@ -28,7 +28,7 @@ permalink: /
 
 ## 📦 Overview
 
-> **📖 [📚🌐 Live Complete Documentation](https://n3b3x.github.io/hf-alicat-basis2-driver/)** —
+> **📖 [📚🌐 Live Complete Documentation](https://hardfoc.github.io/hf-alicat-basis2-driver/)** —
 > Interactive guides, hardware diagrams, and step-by-step tutorials.
 
 **HF-Alicat-BASIS2** is a header-only C++17 driver for the **Alicat BASIS-2** mass-flow

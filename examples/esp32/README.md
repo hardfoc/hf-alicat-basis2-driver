@@ -14,7 +14,7 @@ Initialize the shared tooling submodule once:
 git submodule update --init --recursive
 ```
 
-This checks out `examples/esp32/scripts` ([hf-espidf-project-tools](https://github.com/N3b3x/hf-espidf-project-tools))
+This checks out `examples/esp32/scripts` ([hf-espidf-project-tools](https://github.com/hardfoc/hf-espidf-project-tools))
 so you can build and flash from `examples/esp32/` in this driver repo or
 from any consuming repository that vendors the same layout.
 

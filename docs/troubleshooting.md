@@ -93,4 +93,4 @@ Please attach:
 - Output of `Driver::ReadIdentity()` (firmware version + serial).
 - A raw byte trace of the failing transaction.
 
-GitHub: <https://github.com/N3b3x/hf-alicat-basis2-driver/issues>
+GitHub: <https://github.com/hardfoc/hf-alicat-basis2-driver/issues>
