@@ -1,35 +1,35 @@
 <map id="inc/alicat_basis2.hpp" name="inc/alicat_basis2.hpp">
-<area shape="rect" id="Node000001" title="Hardware&#45;agnostic driver for Alicat BASIS&#45;2 mass&#45;flow meters and controllers (B&#45;Series / BC&#45;Series)." alt="" coords="473,5,631,31"/>
-<area shape="rect" id="Node000002" href="$alicat__basis2__modbus_8hpp.html" title="Modbus&#45;RTU framing and CRC&#45;16 helpers used by the BASIS&#45;2 driver." alt="" coords="220,86,415,111"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="519,33,365,84,363,79,517,28"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="5,240,61,265"/>
-<area shape="poly" id="edge18_Node000001_Node000003" title=" " alt="" coords="473,25,407,30,331,41,251,57,174,81,130,97,96,111,67,132,41,168,32,197,32,226,27,226,27,196,36,165,64,129,93,107,128,92,172,76,250,52,330,35,406,25,472,19"/>
-<area shape="rect" id="Node000004" title=" " alt="" coords="389,240,456,265"/>
-<area shape="poly" id="edge19_Node000001_Node000004" title=" " alt="" coords="557,31,561,61,561,104,554,150,547,173,536,194,522,209,506,222,470,240,468,236,503,218,518,205,531,190,542,171,549,149,556,103,555,62,552,31"/>
-<area shape="rect" id="Node000005" title=" " alt="" coords="597,167,667,192"/>
-<area shape="poly" id="edge20_Node000001_Node000005" title=" " alt="" coords="560,30,622,153,618,155,555,32"/>
-<area shape="rect" id="Node000006" href="$alicat__basis2__registers_8hpp.html" title="Modbus&#45;RTU holding&#45;register addresses for Alicat BASIS&#45;2." alt="" coords="323,167,522,192"/>
-<area shape="poly" id="edge11_Node000001_Node000006" title=" " alt="" coords="545,32,443,158,439,154,541,29"/>
-<area shape="rect" id="Node000007" href="$alicat__basis2__types_8hpp.html" title="Public type definitions for the Alicat BASIS&#45;2 driver." alt="" coords="71,167,249,192"/>
-<area shape="poly" id="edge12_Node000001_Node000007" title=" " alt="" coords="473,27,323,46,255,61,229,70,210,81,194,96,182,115,168,154,163,152,177,113,190,93,206,77,226,65,253,56,322,40,472,22"/>
-<area shape="rect" id="Node000009" href="$alicat__basis2__uart__interface_8hpp.html" title="CRTP serial transport for the Alicat BASIS&#45;2 driver." alt="" coords="641,79,781,119"/>
-<area shape="poly" id="edge13_Node000001_Node000009" title=" " alt="" coords="576,28,661,70,659,75,574,33"/>
-<area shape="rect" id="Node000011" title=" " alt="" coords="805,86,979,111"/>
-<area shape="poly" id="edge17_Node000001_Node000011" title=" " alt="" coords="602,28,830,80,829,86,601,33"/>
-<area shape="rect" id="Node000012" title=" " alt="" coords="1004,86,1071,111"/>
-<area shape="poly" id="edge21_Node000001_Node000012" title=" " alt="" coords="632,21,799,39,897,54,993,76,1001,78,999,84,991,81,896,60,799,44,631,27"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="220,105,178,112,136,124,96,143,61,169,51,181,44,196,37,227,32,226,39,194,46,178,57,165,93,138,134,119,177,107,219,100"/>
-<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="315,112,306,150,306,171,313,191,325,206,341,219,377,237,375,242,338,223,322,210,308,193,301,172,301,149,310,111"/>
-<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="364,109,584,163,583,168,362,114"/>
-<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="334,109,398,156,395,161,331,114"/>
-<area shape="poly" id="edge7_Node000002_Node000007" title=" " alt="" coords="296,114,196,163,194,158,293,109"/>
-<area shape="poly" id="edge6_Node000006_Node000004" title=" " alt="" coords="425,192,425,226,420,226,420,192"/>
-<area shape="poly" id="edge8_Node000007_Node000003" title=" " alt="" coords="141,194,67,235,65,231,138,190"/>
-<area shape="poly" id="edge9_Node000007_Node000004" title=" " alt="" coords="203,189,377,236,376,241,202,195"/>
-<area shape="rect" id="Node000008" title=" " alt="" coords="111,240,209,265"/>
-<area shape="poly" id="edge10_Node000007_Node000008" title=" " alt="" coords="163,192,163,226,157,226,157,192"/>
-<area shape="poly" id="edge14_Node000009_Node000004" title=" " alt="" coords="712,119,704,157,695,177,682,194,645,213,589,229,470,249,469,243,588,224,643,208,678,190,691,174,699,155,707,118"/>
-<area shape="poly" id="edge15_Node000009_Node000005" title=" " alt="" coords="694,121,655,159,652,155,690,117"/>
-<area shape="rect" id="Node000010" title=" " alt="" coords="743,167,835,192"/>
-<area shape="poly" id="edge16_Node000009_Node000010" title=" " alt="" coords="732,117,770,155,766,159,728,121"/>
+<area shape="rect" id="Node000001" title="Hardware&#45;agnostic driver for Alicat BASIS&#45;2 mass&#45;flow meters and controllers (B&#45;Series / BC&#45;Series)." alt="" coords="473,5,630,33"/>
+<area shape="rect" id="Node000002" href="$alicat__basis2__modbus_8hpp.html" title="Modbus&#45;RTU framing and CRC&#45;16 helpers used by the BASIS&#45;2 driver." alt="" coords="222,90,415,117"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="512,35,371,87,369,82,517,32"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,249,61,277"/>
+<area shape="poly" id="edge18_Node000001_Node000003" title=" " alt="" coords="470,24,407,32,331,42,251,59,174,84,129,100,93,116,64,138,38,175,30,204,30,234,25,234,24,203,33,173,61,134,91,111,127,95,172,78,250,54,330,37,406,26,475,22"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="390,249,455,277"/>
+<area shape="poly" id="edge19_Node000001_Node000004" title=" " alt="" coords="556,31,561,65,562,109,555,157,547,181,535,203,522,219,506,232,470,250,468,245,503,227,518,215,531,200,542,179,549,156,556,109,555,65,553,35"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="596,174,665,201"/>
+<area shape="poly" id="edge20_Node000001_Node000005" title=" " alt="" coords="559,31,620,160,615,159,556,36"/>
+<area shape="rect" id="Node000006" href="$alicat__basis2__registers_8hpp.html" title="Modbus&#45;RTU holding&#45;register addresses for Alicat BASIS&#45;2." alt="" coords="323,174,522,201"/>
+<area shape="poly" id="edge11_Node000001_Node000006" title=" " alt="" coords="544,32,443,164,440,160,539,35"/>
+<area shape="rect" id="Node000007" href="$alicat__basis2__types_8hpp.html" title="Public type definitions for the Alicat BASIS&#45;2 driver." alt="" coords="71,174,248,201"/>
+<area shape="poly" id="edge12_Node000001_Node000007" title=" " alt="" coords="470,28,324,48,257,63,231,73,212,83,196,99,183,119,168,160,163,157,179,117,192,96,209,79,228,68,255,58,323,42,475,25"/>
+<area shape="rect" id="Node000009" href="$alicat__basis2__uart__interface_8hpp.html" title="CRTP serial transport for the Alicat BASIS&#45;2 driver." alt="" coords="639,81,779,126"/>
+<area shape="poly" id="edge13_Node000001_Node000009" title=" " alt="" coords="577,31,657,73,651,74,577,36"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="802,90,976,117"/>
+<area shape="poly" id="edge17_Node000001_Node000011" title=" " alt="" coords="606,31,823,85,818,86,606,36"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="1000,90,1066,117"/>
+<area shape="poly" id="edge21_Node000001_Node000012" title=" " alt="" coords="631,22,797,39,894,55,988,78,997,83,991,83,987,84,893,61,796,44,631,27"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="219,109,180,117,137,130,96,149,60,176,50,188,44,203,37,235,31,233,38,202,46,186,56,172,93,144,135,125,179,112,224,106"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="315,116,307,157,307,179,314,200,326,215,341,228,378,249,372,248,338,232,322,219,309,203,302,180,301,157,311,120"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="369,115,583,172,578,174,368,120"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="336,115,396,164,391,164,334,120"/>
+<area shape="poly" id="edge7_Node000002_Node000007" title=" " alt="" coords="291,119,200,169,197,164,295,116"/>
+<area shape="poly" id="edge6_Node000006_Node000004" title=" " alt="" coords="424,200,424,235,420,232,420,204"/>
+<area shape="poly" id="edge8_Node000007_Node000003" title=" " alt="" coords="138,204,70,244,67,239,136,200"/>
+<area shape="poly" id="edge9_Node000007_Node000004" title=" " alt="" coords="207,199,377,247,372,250,206,205"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="112,249,208,277"/>
+<area shape="poly" id="edge10_Node000007_Node000008" title=" " alt="" coords="161,200,162,235,157,232,158,204"/>
+<area shape="poly" id="edge14_Node000009_Node000004" title=" " alt="" coords="710,124,702,165,693,186,679,203,642,223,588,238,471,259,470,253,587,233,640,218,675,199,688,183,697,164,706,128"/>
+<area shape="poly" id="edge15_Node000009_Node000005" title=" " alt="" coords="691,125,655,164,652,160,686,127"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="739,174,831,201"/>
+<area shape="poly" id="edge16_Node000009_Node000010" title=" " alt="" coords="730,124,765,163,760,161,728,129"/>
 </map>
