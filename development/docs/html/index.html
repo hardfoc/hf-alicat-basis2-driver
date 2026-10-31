@@ -98,7 +98,7 @@ $(function(){initNavTree('index.html',''); initResizable(); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="md_README"></a> <b>Header-only C++17 driver for Alicat BASIS-2 mass-flow meters and controllers (B-Series &amp; BC-Series) over Modbus-RTU</b></p>
-<p><a href="https://en.cppreference.com/w/cpp/17"><img src="https://img.shields.io/badge/C%2B%2B-17-blue.svg" alt="C++" style="pointer-events: none;" class="inline"/></a> [<img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License" style="pointer-events: none;" class="inline"/>](LICENSE) <a href="https://github.com/N3b3x/hf-alicat-basis2-driver/actions/workflows/esp32-examples-build-ci.yml"><img src="https://github.com/N3b3x/hf-alicat-basis2-driver/actions/workflows/esp32-examples-build-ci.yml/badge.svg?branch=main" alt="CI" style="pointer-events: none;" class="inline"/></a> <a href="https://n3b3x.github.io/hf-alicat-basis2-driver/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-blue" alt="Docs" class="inline"/></a></p>
+<p><a href="https://en.cppreference.com/w/cpp/17"><img src="https://img.shields.io/badge/C%2B%2B-17-blue.svg" alt="C++" style="pointer-events: none;" class="inline"/></a> [<img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License" style="pointer-events: none;" class="inline"/>](LICENSE) <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/actions/workflows/esp32-examples-build-ci.yml"><img src="https://github.com/hardfoc/hf-alicat-basis2-driver/actions/workflows/esp32-examples-build-ci.yml/badge.svg?branch=main" alt="CI" style="pointer-events: none;" class="inline"/></a> <a href="https://hardfoc.github.io/hf-alicat-basis2-driver/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-blue" alt="Docs" class="inline"/></a></p>
 <h1><a class="anchor" id="autotoc_md1"></a>
 📚 Table of Contents</h1>
 <ol type="1">
@@ -115,7 +115,7 @@ $(function(){initNavTree('index.html',''); initResizable(); });
 <h1><a class="anchor" id="autotoc_md2"></a>
 📦 Overview</h1>
 <blockquote class="doxtable">
-<p>&zwj;<b>📖 <a href="https://n3b3x.github.io/hf-alicat-basis2-driver/">📚🌐 Live Complete Documentation</a></b> — Interactive guides, hardware diagrams, and step-by-step tutorials. </p>
+<p>&zwj;<b>📖 <a href="https://hardfoc.github.io/hf-alicat-basis2-driver/">📚🌐 Live Complete Documentation</a></b> — Interactive guides, hardware diagrams, and step-by-step tutorials. </p>
 </blockquote>
 <p><b>HF-Alicat-BASIS2</b> is a header-only C++17 driver for the <b>Alicat BASIS-2</b> mass-flow meters and controllers (B-Series &amp; BC-Series). It implements the Modbus-RTU register set documented in <em>DOC-MANUAL-BASIS2 Rev 4</em> (May 2025) over any byte-level UART transport via a CRTP serial adapter — <b>zero dynamic allocation, zero exceptions, zero virtual dispatch</b>.</p>
 <p>The driver intentionally focuses on the <b>Modbus-RTU</b> path because it scales to multidrop RS-485 with up to 247 instruments on a single MCU UART. The ASCII protocol is documented for completeness; if you need it, build it on top of the same CRTP <code>UartInterface</code> adapter.</p>
