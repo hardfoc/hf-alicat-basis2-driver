@@ -19,7 +19,10 @@ ctest --test-dir build-host --output-on-failure
 | --- | --- |
 | [`tests/test_modbus.cpp`](../tests/test_modbus.cpp) | CRC-16 against the Modbus specification example, request builders, reply parsing |
 | [`tests/test_driver.cpp`](../tests/test_driver.cpp) | Identity, live data scaling, setpoint encoding, magic values, range checks, address change, errors, discovery |
+| [`tests/test_hooks.cpp`](../tests/test_hooks.cpp) | The optional port hooks `delay_ms_impl()` and `log_impl()`, the driver's failure logs |
+| [`tests/test_timing.cpp`](../tests/test_timing.cpp) | The 3.5-character inter-frame gap before every request |
 | [`tests/mock_basis2.hpp`](../tests/mock_basis2.hpp) | The instrument model |
+| [`tests/install/`](../tests/install/run_install_test.cmake) | CTest `hf_alicat_basis2_install_consumer`: `cmake --install` to a temporary prefix, every header present, a `find_package()` consumer builds |
 
 ## Documentation snippets
 

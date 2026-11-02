@@ -72,6 +72,44 @@ constexpr std::string_view ToString(DriverError e) noexcept {
     return "?";
 }
 
+/**
+ * @brief Exception code of a Modbus exception reply (function code | 0x80, one code byte).
+ *
+ * Modbus Application Protocol V1.1b3, section 7. The BASIS-2 manual (Rev 4, "Communicating Via
+ * Modbus-RTU", p. 18) names the illegal data address ("Bad Address") reply for undefined registers.
+ * `Driver::GetLastException()` returns the code of the last exception reply.
+ */
+enum class ModbusExceptionCode : uint8_t {
+  None = 0x00,                ///< The last transaction got no exception reply.
+  IllegalFunction = 0x01,     ///< Function code not supported.
+  IllegalDataAddress = 0x02,  ///< Register not implemented ("Bad Address").
+  IllegalDataValue = 0x03,    ///< Value not accepted.
+  ServerDeviceFailure = 0x04, ///< Unrecoverable error in the instrument.
+  Acknowledge = 0x05,         ///< Accepted, long-running.
+  ServerDeviceBusy = 0x06,    ///< Busy; retry later.
+};
+
+/// Convert a ModbusExceptionCode to a stable human-readable string (no allocation).
+constexpr std::string_view ToString(ModbusExceptionCode c) noexcept {
+  switch (c) {
+  case ModbusExceptionCode::None:
+    return "None";
+  case ModbusExceptionCode::IllegalFunction:
+    return "IllegalFunction";
+  case ModbusExceptionCode::IllegalDataAddress:
+    return "IllegalDataAddress";
+  case ModbusExceptionCode::IllegalDataValue:
+    return "IllegalDataValue";
+  case ModbusExceptionCode::ServerDeviceFailure:
+    return "ServerDeviceFailure";
+  case ModbusExceptionCode::Acknowledge:
+    return "Acknowledge";
+  case ModbusExceptionCode::ServerDeviceBusy:
+    return "ServerDeviceBusy";
+  }
+  return "?";
+}
+
 /// Lightweight result wrapper. Aborts on `value()` if `!ok()`.
 template <typename T>
 struct DriverResult {
@@ -283,22 +321,24 @@ struct InstantaneousData {
 };
 
 /**
- * @brief Decoded measurement-window result (registers 4200..4214).
+ * @brief Decoded measurement-window result (registers 4201..4215).
  */
 struct MeasurementData {
-    uint16_t  num_samples_collected{0};
-    int16_t   min_temperature_raw{0};
-    int16_t   max_temperature_raw{0};
-    int16_t   min_flow_raw{0};
-    int16_t   max_flow_raw{0};
-    int16_t   avg_temperature_raw{0};
-    int16_t   avg_flow_raw{0};
-    int32_t   prev_avg_flow_raw{0};
+  uint16_t num_samples_collected{0}; ///< Register 4206: samples averaged so far.
+  int16_t min_temperature_raw{0};
+  int16_t max_temperature_raw{0};
+  int16_t min_flow_raw{0};
+  int16_t max_flow_raw{0};
+  int16_t avg_temperature_raw{0};
+  int16_t avg_flow_raw{0};
+  int32_t prev_avg_flow_raw{0}; ///< Registers 4214-4215, signed 32-bit.
 
-    float min_temperature_c{0.0f};
-    float max_temperature_c{0.0f};
-    float avg_temperature_c{0.0f};
-    float avg_flow{0.0f};
+  float min_temperature_c{0.0f};
+  float max_temperature_c{0.0f};
+  float avg_temperature_c{0.0f};
+  float avg_flow{0.0f}; ///< `avg_flow_raw` / 10^flow_decimals.
+
+  uint16_t num_samples_requested{0}; ///< Register 4201: samples to take.
 };
 
 /**
@@ -337,6 +377,12 @@ inline constexpr uint16_t kMagicTare            = 0xAA55;  // register 39 / 53.
 inline constexpr uint16_t kMagicFactoryRestore  = 0x5214;  // register 80.
 
 inline constexpr uint16_t kDefaultTimeoutMs     = 200;
+/// @deprecated Never used by the driver. The inter-frame gap is computed from
+///             the bus baud rate: `modbus::InterFrameGapUs()`,
+///             `Driver::SetBusBaudRate()`.
 inline constexpr uint16_t kInterFrameDelayMs    = 5;
+/// Baud rate the driver assumes for the inter-frame gap until told otherwise
+/// (the instrument's factory default, manual Rev 4 p. 18).
+inline constexpr uint32_t kDefaultBusBaudBps = 38400;
 
 }  // namespace alicat_basis2

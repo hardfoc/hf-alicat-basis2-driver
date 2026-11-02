@@ -74,6 +74,7 @@ add_subdirectory(external/hf-alicat-basis2-driver)
 target_link_libraries(my_app PRIVATE hf::alicat_basis2)
 ```
 
+Or install it (`cmake --install`) and use `find_package(hf_alicat_basis2)` with the same target.
 ESP-IDF: use the component wrapper in
 [`examples/esp32/components/hf_alicat_basis2`](examples/esp32/components/hf_alicat_basis2/CMakeLists.txt).
 Details: [Installation](https://hardfoc.github.io/hf-alicat-basis2-driver/latest/installation/).

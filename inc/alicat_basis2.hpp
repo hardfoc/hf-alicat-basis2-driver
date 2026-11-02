@@ -90,6 +90,28 @@ public:
     /// @return Current per-transaction timeout in milliseconds.
     uint16_t GetTimeoutMs() const noexcept  { return timeout_ms_; }
 
+    /**
+     * @brief Tell the driver the bus baud rate (default 38400, the factory rate).
+     *
+     * Only used for the Modbus-RTU inter-frame gap: before every request the
+     * driver waits `modbus::InterFrameGapMs(bps)` through the port's
+     * `delay_ms()` (3.5 characters, 1.75 ms above 19200 baud; Modbus over
+     * Serial Line V1.02 section 2.5.1.1), so the request cannot start inside
+     * the idle gap that ends the previous frame. `SetBaudRate()` updates it.
+     * Several drivers on one port: set it on each.
+     */
+    void SetBusBaudRate(uint32_t bps) noexcept {
+      bus_bps_ = bps;
+    }
+    /// @return Bus baud rate used for the inter-frame gap.
+    uint32_t GetBusBaudRate() const noexcept {
+      return bus_bps_;
+    }
+    /// @return The idle gap left before each request, in microseconds (before rounding to ms).
+    uint32_t GetInterFrameGapUs() const noexcept {
+      return modbus::InterFrameGapUs(bus_bps_);
+    }
+
     /// Switch the slave address this driver targets at runtime.
     void SetAddress(uint8_t addr) noexcept { address_ = addr; }
     /// @return Current Modbus slave address (1..247) this driver is talking to.
@@ -415,30 +437,45 @@ public:
 
     /**
      * @brief Read the current / most-recent measurement window result.
+     *
+     * One request reads registers 4201..4215 (manual Rev 4, "Measurement
+     * Data Registers", pp. 22-23). The previous window's average flow is the
+     * signed 32-bit value at 4214-4215, high register first.
+     *
+     * @param flow_decimals  The instrument's factory-set flow decimals, used
+     *                       for `avg_flow` (as in `ReadInstantaneous()`).
      * @return `DriverResult<MeasurementData>` populated with min / max /
      *         average temperature and flow on success; transport /
      *         Modbus error on failure.
+     * @note  With `MeasurementTrigger::OnAverageFlowRead` set, reading the
+     *        low register 4215 starts the next measurement window.
      */
-    DriverResult<MeasurementData> ReadMeasurement() noexcept {
-        std::array<uint16_t, 14> regs{};  // 4201..4214
-        const auto rc = ReadHoldingRegisters(reg::MeasurementSampleCount, regs.data(),
-                                             static_cast<uint8_t>(regs.size()));
-        if (rc != DriverError::None) return DriverResult<MeasurementData>::failure(rc);
+    DriverResult<MeasurementData> ReadMeasurement(uint8_t flow_decimals = 3) noexcept {
+      constexpr uint16_t kFirst = reg::MeasurementSampleCount;                             // 4201
+      constexpr uint16_t kLast = reg::MeasurementPrevAvgFlow + reg::kPrevAvgFlowCount - 1; // 4215
+      std::array<uint16_t, kLast - kFirst + 1> regs{};
+      const auto rc = ReadHoldingRegisters(kFirst, regs.data(), static_cast<uint8_t>(regs.size()));
+      if (rc != DriverError::None)
+        return DriverResult<MeasurementData>::failure(rc);
+      const auto at = [&regs](uint16_t r) { return regs[r - kFirst]; };
 
-        MeasurementData out{};
-        out.num_samples_collected = regs[0];                // 4201 actually holds sample count we wrote
-        out.min_temperature_raw   = static_cast<int16_t>(regs[1]);
-        out.max_temperature_raw   = static_cast<int16_t>(regs[2]);
-        out.min_flow_raw          = static_cast<int16_t>(regs[3]);
-        out.max_flow_raw          = static_cast<int16_t>(regs[4]);
-        out.avg_temperature_raw   = static_cast<int16_t>(regs[6]);
-        out.avg_flow_raw          = static_cast<int16_t>(regs[7]);
-        out.prev_avg_flow_raw     =
-            (static_cast<int32_t>(static_cast<int16_t>(regs[12])) << 16) | regs[13];
-        out.min_temperature_c = static_cast<float>(out.min_temperature_raw) * 0.01f;
-        out.max_temperature_c = static_cast<float>(out.max_temperature_raw) * 0.01f;
-        out.avg_temperature_c = static_cast<float>(out.avg_temperature_raw) * 0.01f;
-        return DriverResult<MeasurementData>::success(out);
+      MeasurementData out{};
+      out.num_samples_requested = at(reg::MeasurementSampleCount);
+      out.num_samples_collected = at(reg::MeasurementSamplesAveraged);
+      out.min_temperature_raw = static_cast<int16_t>(at(reg::MeasurementMinTemp));
+      out.max_temperature_raw = static_cast<int16_t>(at(reg::MeasurementMaxTemp));
+      out.min_flow_raw = static_cast<int16_t>(at(reg::MeasurementMinFlow));
+      out.max_flow_raw = static_cast<int16_t>(at(reg::MeasurementMaxFlow));
+      out.avg_temperature_raw = static_cast<int16_t>(at(reg::MeasurementAvgTemp));
+      out.avg_flow_raw = static_cast<int16_t>(at(reg::MeasurementAvgFlow));
+      out.prev_avg_flow_raw =
+          static_cast<int32_t>((static_cast<uint32_t>(at(reg::MeasurementPrevAvgFlow)) << 16) |
+                               at(reg::MeasurementPrevAvgFlow + 1));
+      out.min_temperature_c = static_cast<float>(out.min_temperature_raw) * 0.01f;
+      out.max_temperature_c = static_cast<float>(out.max_temperature_raw) * 0.01f;
+      out.avg_temperature_c = static_cast<float>(out.avg_temperature_raw) * 0.01f;
+      out.avg_flow = ScaleFlow(out.avg_flow_raw, flow_decimals);
+      return DriverResult<MeasurementData>::success(out);
     }
 
     //==========================================================================
@@ -492,9 +529,15 @@ public:
      *            2. **Drain the response on the OLD baud**,
      *            3. Reconfigure its UART to the NEW baud,
      *            4. (Optional) Issue an identity read to confirm.
+     *
+     *          After the write the driver uses the new rate for its
+     *          inter-frame gap (`SetBusBaudRate()`), whatever the result:
+     *          the instrument switches as soon as it receives the request.
      */
     DriverResult<void> SetBaudRate(BaudRate br) noexcept {
-        return WriteSingleRegister(reg::BaudRate, static_cast<uint16_t>(br));
+      const auto rc = WriteSingleRegister(reg::BaudRate, static_cast<uint16_t>(br));
+      bus_bps_ = BaudRateToBps(br);
+      return rc;
     }
 
     /**
@@ -537,6 +580,7 @@ public:
         const uint8_t saved_addr     = address_;
         const uint16_t saved_timeout = timeout_ms_;
         timeout_ms_ = probe_timeout_ms;
+        quiet_ = true; // silent addresses are expected: do not log each timeout
 
         uint8_t found = 0;
         for (uint16_t a = first_addr; a <= last_addr; ++a) {
@@ -551,6 +595,7 @@ public:
 
         address_    = saved_addr;
         timeout_ms_ = saved_timeout;
+        quiet_ = false;
         return DriverResult<uint8_t>::success(found);
     }
 
@@ -558,6 +603,12 @@ public:
     // RAW MODBUS PRIMITIVES
     //==========================================================================
 
+    /**
+     * @brief Function 03: read `count` holding registers starting at `reg_addr`.
+     * @return `None`, or the transaction's error. An exception reply returns
+     *         `ModbusException` as soon as its 5 bytes arrived; its code is in
+     *         `GetLastException()`.
+     */
     DriverError ReadHoldingRegisters(uint16_t reg_addr, uint16_t* out, uint8_t count) noexcept {
         if (!out || count == 0 || count > 125) return DriverError::InvalidParameter;
         std::array<uint8_t, 8> tx{};
@@ -565,38 +616,52 @@ public:
                                                             tx.data(), tx.size());
         if (tx_len == 0) return DriverError::BufferTooSmall;
 
-        uart_.flush_rx();
-        uart_.write(tx.data(), tx_len);
-
         // Expected response: addr(1) + fn(1) + bytecount(1) + payload(2*count) + crc(2)
         const std::size_t need = 5 + 2U * count;
         std::array<uint8_t, 5 + 2 * 32> rx{};  // up to 32 regs per call
         if (need > rx.size()) return DriverError::BufferTooSmall;
-        const std::size_t got = uart_.read(rx.data(), need, timeout_ms_);
-        if (got == 0) return DriverError::Timeout;
-        if (got < 5)  return DriverError::InvalidFrame;
-        return modbus::ParseReadHolding(rx.data(), got, address_, count, out);
+
+        SendRequest(tx.data(), tx_len);
+        std::size_t got = 0;
+        DriverError rc = ReceiveReply(reg::fn::ReadHolding, rx.data(), need, got);
+        if (rc == DriverError::None) {
+          rc = modbus::ParseReadHolding(rx.data(), got, address_, count, out);
+        }
+        return LogFailure(rc, reg::fn::ReadHolding, reg_addr);
     }
 
+    /**
+     * @brief Function 06: write one holding register.
+     * @return Success, or the transaction's error. An exception reply returns
+     *         `ModbusException` as soon as its 5 bytes arrived; its code is in
+     *         `GetLastException()`.
+     */
     DriverResult<void> WriteSingleRegister(uint16_t reg_addr, uint16_t value) noexcept {
         std::array<uint8_t, 8> tx{};
         const std::size_t tx_len = modbus::BuildWriteSingle(address_, reg_addr, value,
                                                             tx.data(), tx.size());
         if (tx_len == 0) return DriverResult<void>::failure(DriverError::BufferTooSmall);
 
-        uart_.flush_rx();
-        uart_.write(tx.data(), tx_len);
+        SendRequest(tx.data(), tx_len);
 
         // Broadcast → no response.
         if (address_ == kBroadcastAddress) return DriverResult<void>::success();
 
         std::array<uint8_t, 8> rx{};
-        const std::size_t got = uart_.read(rx.data(), 8, timeout_ms_);
-        if (got == 0) return DriverResult<void>::failure(DriverError::Timeout);
-        return DriverResult<void>{ modbus::ParseWriteSingleEcho(rx.data(), got,
-                                                                tx.data(), tx_len) };
+        std::size_t got = 0;
+        DriverError rc = ReceiveReply(reg::fn::WriteSingle, rx.data(), rx.size(), got);
+        if (rc == DriverError::None) {
+          rc = modbus::ParseWriteSingleEcho(rx.data(), got, tx.data(), tx_len);
+        }
+        return DriverResult<void>{LogFailure(rc, reg::fn::WriteSingle, reg_addr)};
     }
 
+    /**
+     * @brief Function 16: write `count` (1..32) consecutive holding registers.
+     * @return Success, or the transaction's error. An exception reply returns
+     *         `ModbusException` as soon as its 5 bytes arrived; its code is in
+     *         `GetLastException()`.
+     */
     DriverResult<void> WriteMultipleRegisters(uint16_t reg_addr,
                                               const uint16_t* regs, uint8_t count) noexcept {
         if (!regs || count == 0 || count > 32) {
@@ -607,19 +672,100 @@ public:
                                                               tx.data(), tx.size());
         if (tx_len == 0) return DriverResult<void>::failure(DriverError::BufferTooSmall);
 
-        uart_.flush_rx();
-        uart_.write(tx.data(), tx_len);
+        SendRequest(tx.data(), tx_len);
 
         if (address_ == kBroadcastAddress) return DriverResult<void>::success();
 
         std::array<uint8_t, 8> rx{};
-        const std::size_t got = uart_.read(rx.data(), 8, timeout_ms_);
-        if (got == 0) return DriverResult<void>::failure(DriverError::Timeout);
-        return DriverResult<void>{ modbus::ParseWriteMultipleEcho(rx.data(), got,
-                                                                  address_, reg_addr, count) };
+        std::size_t got = 0;
+        DriverError rc = ReceiveReply(reg::fn::WriteMultiple, rx.data(), rx.size(), got);
+        if (rc == DriverError::None) {
+          rc = modbus::ParseWriteMultipleEcho(rx.data(), got, address_, reg_addr, count);
+        }
+        return DriverResult<void>{LogFailure(rc, reg::fn::WriteMultiple, reg_addr)};
+    }
+
+    /**
+     * @brief Exception code of the last transaction's exception reply.
+     * @return The code when the last request got an exception reply (the call
+     *         returned `DriverError::ModbusException`), `ModbusExceptionCode::None`
+     *         otherwise. Reset at the start of every request.
+     */
+    ModbusExceptionCode GetLastException() const noexcept {
+      return last_exception_;
     }
 
 private:
+  /// Tag passed to `UartInterface::log()`.
+  static constexpr const char* kLogTag = "alicat_basis2";
+
+  /// Report a failed transaction through the port's optional `log()` hook; returns `rc`.
+  DriverError LogFailure(DriverError rc, uint8_t fn, uint16_t reg_addr) noexcept {
+    if (rc == DriverError::None || quiet_) {
+      return rc;
+    }
+    if (rc == DriverError::ModbusException) {
+      uart_.log(kLogTag, "addr %u fn 0x%02X reg %u: ModbusException %s",
+                static_cast<unsigned>(address_), static_cast<unsigned>(fn),
+                static_cast<unsigned>(reg_addr), ToString(last_exception_).data());
+    } else {
+      uart_.log(kLogTag, "addr %u fn 0x%02X reg %u: %s", static_cast<unsigned>(address_),
+                static_cast<unsigned>(fn), static_cast<unsigned>(reg_addr), ToString(rc).data());
+    }
+    return rc;
+  }
+
+  /**
+   * @brief Start a transaction: leave the inter-frame gap, drop stale RX bytes, send.
+   *
+   * The previous transaction ended when its reply's last byte arrived (or its
+   * read timed out, or a broadcast was written), so waiting t3.5 here
+   * guarantees the idle time Modbus over Serial Line V1.02 section 2.5.1.1
+   * requires before a new frame. Rounded up to whole milliseconds; a no-op
+   * when the port has no `delay_ms_impl()`.
+   */
+  void SendRequest(const uint8_t* tx, std::size_t tx_len) noexcept {
+    last_exception_ = ModbusExceptionCode::None;
+    uart_.delay_ms(modbus::InterFrameGapMs(bus_bps_));
+    uart_.flush_rx();
+    uart_.write(tx, tx_len);
+  }
+
+  /**
+   * @brief Receive the reply to a request with function code `fn`.
+   *
+   * Reads the first `modbus::kReplyHeaderLength` bytes, then decides on the
+   * frame length: with bit 7 of the function code set the reply is an
+   * exception reply (5 bytes, Modbus Application Protocol V1.1b3 section 7)
+   * and only its CRC is still to come; otherwise the rest of the
+   * `expected_len`-byte reply is read. A rejected request therefore returns at
+   * once instead of waiting the full timeout for bytes that never come.
+   *
+   * @param[out] got Bytes in `rx` when the return value is `None`.
+   * @return `None` when a normal reply was read (the caller parses it);
+   *         `Timeout`, `InvalidFrame`, `BadCrc`, `ResponseMismatch` or
+   *         `ModbusException` (code in `last_exception_`) otherwise.
+   */
+  DriverError ReceiveReply(uint8_t fn, uint8_t* rx, std::size_t expected_len,
+                           std::size_t& got) noexcept {
+    got = uart_.read(rx, modbus::kReplyHeaderLength, timeout_ms_);
+    if (got == 0)
+      return DriverError::Timeout;
+    if (got < modbus::kReplyHeaderLength)
+      return DriverError::InvalidFrame;
+    if (modbus::IsExceptionReply(rx, got)) {
+      got += uart_.read(rx + got, modbus::kExceptionFrameLength - got, timeout_ms_);
+      uint8_t code = 0;
+      const DriverError rc = modbus::ParseException(rx, got, address_, fn, &code);
+      if (rc == DriverError::ModbusException) {
+        last_exception_ = static_cast<ModbusExceptionCode>(code);
+      }
+      return rc;
+    }
+    got += uart_.read(rx + got, expected_len - got, timeout_ms_);
+    return DriverError::None;
+  }
+
     static float Pow10(int n) noexcept {
         float v = 1.0f;
         for (int i = 0; i < n; ++i) v *= 10.0f;
@@ -635,6 +781,9 @@ private:
     UartT&    uart_;
     uint8_t   address_;
     uint16_t  timeout_ms_;
+    ModbusExceptionCode last_exception_{ModbusExceptionCode::None};
+    bool quiet_{false}; ///< No failure logs (the address sweep expects timeouts).
+    uint32_t bus_bps_{kDefaultBusBaudBps}; ///< Baud rate for the inter-frame gap.
 };
 
 }  // namespace alicat_basis2

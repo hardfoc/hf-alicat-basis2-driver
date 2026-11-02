@@ -59,3 +59,19 @@ TEST_CASE("read-holding parser classifies exceptions, CRC errors and wrong slave
   ok[6] ^= 0x01;
   CHECK(mb::ParseReadHolding(ok, 7, 1, 1, out) == DriverError::BadCrc);
 }
+
+TEST_CASE("exception parser checks length, CRC, address and function, and returns the code") {
+  uint8_t ex[5] = {0x01, 0x86, 0x03, 0, 0};
+  mb::AppendCrc(ex, 3);
+  CHECK(mb::IsExceptionReply(ex, 5));
+  uint8_t code = 0;
+  CHECK(mb::ParseException(ex, 5, 1, 0x06, &code) == DriverError::ModbusException);
+  CHECK_EQ(code, 0x03);
+  CHECK(mb::ParseException(ex, 4, 1, 0x06, &code) == DriverError::InvalidFrame);
+  CHECK(mb::ParseException(ex, 5, 2, 0x06, &code) == DriverError::ResponseMismatch);
+  CHECK(mb::ParseException(ex, 5, 1, 0x10, &code) == DriverError::ResponseMismatch);
+  ex[4] ^= 0x01;
+  CHECK(mb::ParseException(ex, 5, 1, 0x06, &code) == DriverError::BadCrc);
+  const uint8_t normal[3] = {0x01, 0x06, 0x00};
+  CHECK(!mb::IsExceptionReply(normal, 3));
+}

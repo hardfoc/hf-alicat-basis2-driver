@@ -22,7 +22,7 @@ One `Driver<UartT>` object per instrument. Its calls fall into a few groups:
 | Measurement window | `ConfigureMeasurementTrigger()` (controllers), `StartMeasurementSamples()`, `ReadMeasurement()` | All |
 | Bus configuration | `SetModbusAddress()`, `SetAsciiUnitId()`, `SetBaudRate()`, `FactoryRestore()`, `DiscoverPresentAddresses()` | All |
 | Raw access | `ReadHoldingRegisters()`, `WriteSingleRegister()`, `WriteMultipleRegisters()` | All |
-| Driver settings | `SetAddress()`, `GetAddress()`, `SetTimeoutMs()`, `GetTimeoutMs()` | |
+| Driver settings | `SetAddress()`, `GetAddress()`, `SetTimeoutMs()`, `GetTimeoutMs()`, `SetBusBaudRate()`, `GetBusBaudRate()` | |
 
 Every call is `noexcept` and returns `DriverResult<T>` (`.ok()`, `.value`, `.error`) or, for the raw read, a bare
 `DriverError`. Check it: a failed call leaves `value` default-constructed.
@@ -89,7 +89,9 @@ is lost. `SetTotalizerBatch()` takes the volume already scaled to the total-volu
 ```
 
 The instrument samples about every 2.5 ms. Writing the sample count starts a new window and moves the running one
-into the "previous" registers. Use the raw minimum, maximum and average flow with the same decimals as live flow.
+into the "previous" registers. `ReadMeasurement(decimals)` reads registers 4201 to 4215 in one request and scales
+`avg_flow` by the same decimals as live flow; scale the raw minimum, maximum and previous average flow
+(`prev_avg_flow_raw`, 32-bit at 4214-4215) the same way.
 
 ## Find and readdress instruments
 
@@ -117,7 +119,8 @@ top of each other.
 !!! warning "The instrument switches before it answers"
     The manual warns that the host must change its own rate in time to receive the confirmation, and may not.
     Treat the result of `SetBaudRate()` as unreliable, switch the host UART, then confirm with a read at the new
-    rate. If that fails, sweep the six rates to find the instrument again.
+    rate. If that fails, sweep the six rates to find the instrument again. `SetBaudRate()` also switches the
+    driver's inter-frame gap to the new rate; call `SetBusBaudRate()` on the other drivers that share the port.
 
 ## Use any register directly
 
@@ -137,16 +140,19 @@ with their scaling. `ReadHoldingRegisters()` reads up to 32 registers; `WriteMul
 | `DriverError` | Meaning | Where to look |
 | --- | --- | --- |
 | `Timeout` | No byte arrived within the timeout | Wiring, baud rate, address, DE/RE, the timeout |
-| `InvalidFrame` | Too short, wrong byte count; also an exception reply to a write (see below) | Line noise, a register a meter does not have |
+| `InvalidFrame` | Too short, wrong byte count | Line noise, a `read()` that returns early |
 | `BadCrc` | CRC-16 mismatch | Ground, termination, two instruments at one address |
-| `ModbusException` | The instrument returned an exception to a read | Register not implemented by this model or firmware |
+| `ModbusException` | The instrument returned an exception reply; `GetLastException()` has the code | Register not in this model or firmware (`IllegalDataAddress`), a meter asked for a controller setting |
 | `ResponseMismatch` | Reply from another address, or an echo that differs from the request | Address clash, a late reply from an earlier request |
 | `InvalidParameter`, `InvalidAddress` | The driver refused the argument; nothing was sent | Ranges on the [Configuration](configuration.md) page |
 | `BufferTooSmall` | A request longer than the driver's 32-register buffers | Split the access |
 
-!!! note "Exceptions to writes"
-    An exception reply is 5 bytes; the write calls expect an 8-byte reply, so today a rejected write (for example
-    `SetSetpointSource()` on a meter) returns `InvalidFrame` after the full timeout, not `ModbusException`.
+!!! note "Exception replies come back at once"
+    An exception reply is 5 bytes: the function code with bit 7 set, the exception code and the CRC. The driver
+    reads the first 3 bytes of every reply, sees bit 7 and reads only the CRC, so a rejected read or write (for
+    example `SetSetpointSource()` on a meter) returns `ModbusException` as soon as the reply has arrived, not after
+    the timeout. `GetLastException()` returns the code (`ModbusExceptionCode`, `ToString()` names it) until the
+    next request.
 
 The status bits in `InstantaneousData` (`mass_flow_overrange`, `temperature_overrange`, `totalizer_overrange`,
 `valve_held`, `valve_thermal_management`) report instrument conditions, not transport errors.

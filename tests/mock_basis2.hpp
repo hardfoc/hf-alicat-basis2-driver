@@ -12,9 +12,12 @@
 #include "alicat_basis2.hpp"
 
 #include <algorithm>
+#include <cstdarg>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <map>
+#include <string>
 #include <vector>
 
 class MockBasis2 : public alicat_basis2::UartInterface<MockBasis2> {
@@ -24,25 +27,54 @@ public:
   // --- UartInterface ----------------------------------------------------------------------------
 
   void write(const uint8_t* data, std::size_t length) noexcept {
+    idle_before_write.push_back(idle_ms_);
+    idle_ms_ = 0;
     std::vector<uint8_t> frame(data, data + length);
     requests.push_back(frame);
     respond(frame);
   }
 
-  std::size_t read(uint8_t* out, std::size_t max, uint32_t /*timeout_ms*/) noexcept {
+  // Like a real UART read: returns at once when `max` bytes are there, otherwise after the whole
+  // timeout with what arrived. Every expired timeout is counted, and its length added to
+  // `waited_ms`.
+  std::size_t read(uint8_t* out, std::size_t max, uint32_t timeout_ms) noexcept {
     const std::size_t n = std::min(max, rx_.size());
+    idle_ms_ = 0; // the bus was busy (or the read timed out) until now
     std::copy_n(rx_.begin(), n, out);
     rx_.erase(rx_.begin(), rx_.begin() + static_cast<std::ptrdiff_t>(n));
+    if (n < max) {
+      ++timeouts;
+      waited_ms += timeout_ms;
+    }
     return n;
   }
 
   void flush_rx() noexcept { rx_.clear(); }
+
+  // Optional hook: the driver's sleeps count as bus idle time before the next write.
+  void delay_ms_impl(uint32_t ms) noexcept {
+    idle_ms_ += ms;
+  }
+
+  // Optional hook: record what the driver logs.
+  void log_impl(const char* tag, const char* fmt, ...) noexcept {
+    char buf[160];
+    va_list ap;
+    va_start(ap, fmt);
+    std::vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    logs.push_back(std::string(tag) + ": " + buf);
+  }
 
   // --- Test controls ----------------------------------------------------------------------------
 
   std::map<uint16_t, uint16_t> regs;          ///< Holding registers the instrument implements.
   std::vector<std::vector<uint8_t>> requests; ///< Every frame the driver wrote.
   bool corrupt_crc = false;                   ///< Flip a CRC bit in the next replies.
+  unsigned timeouts = 0;                      ///< read() calls that waited the full timeout.
+  unsigned long waited_ms = 0;                ///< Total time read() spent waiting for bytes.
+  std::vector<std::string> logs;              ///< Every line the driver logged.
+  std::vector<uint32_t> idle_before_write; ///< Sleep (ms) since the last bus activity, per write.
   uint8_t address;                            ///< Modbus address the mock answers to.
 
 private:
@@ -110,4 +142,5 @@ private:
   }
 
   std::vector<uint8_t> rx_;
+  uint32_t idle_ms_ = 0;
 };

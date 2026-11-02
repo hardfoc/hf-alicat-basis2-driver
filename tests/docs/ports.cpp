@@ -6,5 +6,9 @@
 
 template class alicat_basis2::Driver<MyUart>;
 
-// The optional hook is found: delay_ms() forwards to MyUart::delay_ms_impl().
-void use_delay(MyUart& uart) { uart.delay_ms(5); }
+// The optional hooks are found: delay_ms() and log() forward to MyUart's delay_ms_impl() and
+// log_impl().
+void use_hooks(MyUart& uart) {
+  uart.delay_ms(5);
+  uart.log("app", "%d", 1);
+}

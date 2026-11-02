@@ -24,10 +24,17 @@ calls are resolved at compile time, so there are no virtual functions, no vtable
 | `write(const uint8_t* data, std::size_t length)` | yes | Send all `length` bytes; return once they are accepted by the UART (better: on the wire) |
 | `read(uint8_t* out, std::size_t max, uint32_t timeout_ms)` | yes | Return when `max` bytes arrived or `timeout_ms` passed; the return value is the number of bytes in `out` |
 | `flush_rx()` | yes | Discard every byte already received |
-| `delay_ms_impl(uint32_t ms)` | optional | Sleep; `UartInterface::delay_ms()` calls it when present and does nothing otherwise |
+| `delay_ms_impl(uint32_t ms)` | optional | Sleep at least `ms`; `UartInterface::delay_ms()` calls it when present and does nothing otherwise (there is no portable time base for a busy-wait) |
+| `log_impl(const char* tag, const char* fmt, ...)` | optional | printf-style log line; `UartInterface::log()` forwards the tag, format and arguments to it when present and does nothing otherwise |
 
-The driver calls `flush_rx()`, then `write()`, then one `read()` with the exact reply length it expects, for
-every request. It does not call `delay_ms()` today.
+The base class finds the optional hooks at compile time, public or private (with
+`friend class alicat_basis2::UartInterface<Self>;`). The driver logs every failed transaction through `log()`
+with the tag `alicat_basis2`, for example `addr 1 fn 0x06 reg 514: ModbusException IllegalDataAddress`; the
+address sweep stays quiet.
+
+The driver calls `flush_rx()`, then `write()`, then `read()` twice for every request: once for the first 3 bytes
+of the reply, then for the rest. The first 3 bytes tell a normal reply from a 5-byte exception reply (bit 7 of the
+function code), so the second `read()` asks for exactly the bytes still to come.
 
 ## The port
 
@@ -37,14 +44,16 @@ every request. It does not call `delay_ms()` today.
 
 ## Rules for the transfer
 
-- **Wait for the whole reply.** The driver asks for the exact length of a good reply (8 bytes for a write,
-  5 + 2N for a read of N registers). A `read()` that returns after the first chunk gives the driver a partial
-  frame: `InvalidFrame` or `BadCrc` that come and go.
-- **Return what you have at the timeout.** A Modbus exception reply is 5 bytes, shorter than the driver asked
-  for; returning the partial bytes lets the driver decode the exception.
-- **Leave the 3.5-character gap.** A new request must start at least 3.5 characters (1.75 ms above 19200 baud)
-  after the previous reply ended ([Hardware](hardware.md#timing)). A read that returns on the last byte followed at
-  once by the next call's `write()` can break it; wait in `write()` if your UART does not.
+- **Wait for every byte asked for.** The driver asks for exactly the bytes it needs (3, then 2 for an exception
+  reply, 5 for a write echo or 2 + 2N for a read of N registers). A `read()` that returns after the first chunk
+  gives the driver a partial frame: `InvalidFrame` or `BadCrc` that come and go.
+- **Return what you have at the timeout.** The return value must be the number of bytes that arrived; `0` is
+  reported as `Timeout`.
+- **Give the driver a sleep for the 3.5-character gap.** A new request must start at least 3.5 characters
+  (1.75 ms above 19200 baud) after the previous frame ended ([Hardware](hardware.md#timing)). The driver waits
+  that long through `delay_ms()` before every request, so `delay_ms_impl()` must sleep *at least* `ms`: a
+  tick-based sleep that rounds 2 ms down to 0 ticks leaves no gap. Without `delay_ms_impl()`, wait in `write()`
+  or let the UART do it. Tell the driver the baud rate with `SetBusBaudRate()` when it is not 38400.
 - **Turn the bus around.** On RS-485, assert DE/RE for the request and release it right after the last stop bit,
   or the instrument's reply collides with your driver. Prefer the UART's hardware RS-485 mode (ESP-IDF
   `UART_MODE_RS485_HALF_DUPLEX`, STM32 `DEM`) over a GPIO toggled in software.
@@ -63,8 +72,8 @@ The ESP32 examples define `EspUartAdapter` in
    [`tests/docs/`](../tests/docs/my_uart.hpp), with the driver instantiated over it.
 2. Call `ReadIdentity()`: a serial number that matches the label proves the whole path.
 3. Call `ReadInstantaneous()` in a loop for a minute: no `BadCrc` or `InvalidFrame` on a healthy link.
-4. Call a write the instrument rejects (for example `SetCommWatchdogMs()` on a meter): it should fail after
-   about one timeout, not hang.
+4. Call a write the instrument rejects (for example `SetCommWatchdogMs()` on a meter): it should return
+   `ModbusException` at once, with `GetLastException()` = `IllegalDataAddress`, not after the timeout.
 
 ## Threads
 

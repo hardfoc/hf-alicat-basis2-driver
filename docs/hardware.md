@@ -71,21 +71,24 @@ instrument ([API guide](api-guide.md#find-and-readdress-instruments)).
 
 ## Timing
 
-Modbus-RTU ends a frame with an idle gap of 3.5 characters, and a new frame must not start sooner. The driver
-writes a request, then reads the reply; it does not insert a gap itself, so the port or the UART must leave it
-([Porting](porting.md#rules-for-the-transfer)).
+Modbus-RTU ends a frame with an idle gap of 3.5 characters (t3.5), and a new frame must not start sooner (Modbus
+over Serial Line V1.02, section 2.5.1.1). The driver leaves it: before every request it waits t3.5 through the
+port's `delay_ms()`, computed from the bus baud rate it was given with `SetBusBaudRate()` (default 38400, the
+factory rate; `SetBaudRate()` updates it). The wait is rounded up to whole milliseconds. A port without
+`delay_ms_impl()` gets no wait and must leave the gap itself ([Porting](porting.md#rules-for-the-transfer)).
 
-| Baud | Byte (8N1) | 3.5-char gap | Live-data exchange |
-| --- | --- | --- | --- |
-| 9600 | 1.04 ms | 3.65 ms | 34.4 ms |
-| 19200 | 0.52 ms | 1.82 ms | 17.2 ms |
-| 38400 | 0.26 ms | 1.75 ms | 8.6 ms |
-| 115200 | 0.087 ms | 1.75 ms | 2.9 ms |
+| Baud | Byte (8N1) | t3.5 | Driver waits | Live-data exchange |
+| --- | --- | --- | --- | --- |
+| 4800 | 2.08 ms | 8.02 ms | 9 ms | 68.8 ms |
+| 9600 | 1.04 ms | 4.01 ms | 5 ms | 34.4 ms |
+| 19200 | 0.52 ms | 2.01 ms | 3 ms | 17.2 ms |
+| 38400 | 0.26 ms | 1.75 ms | 2 ms | 8.6 ms |
+| 115200 | 0.087 ms | 1.75 ms | 2 ms | 2.9 ms |
 
-The live-data exchange is `ReadInstantaneous()`: an 8-byte request and a 25-byte reply. These figures are derived
-from the baud rate and the Modbus over Serial Line specification (10 bits per byte at 8N1; a fixed 1.75 ms gap
-above 19200 baud), not measured. The instrument's own turnaround comes on top; the manual does
-not specify it.
+t3.5 is 3.5 characters of 11 bits, the RTU character of the specification (section 2.5.1), up to 19200 baud, and
+a fixed 1.75 ms above (section 2.5.1.1); `modbus::InterFrameGapUs()` computes it. The live-data exchange is
+`ReadInstantaneous()`: an 8-byte request and a 25-byte reply at 10 bits per byte (8N1), without the gap. These
+figures are derived, not measured. The instrument's own turnaround comes on top; the manual does not specify it.
 
 ```mermaid
 sequenceDiagram

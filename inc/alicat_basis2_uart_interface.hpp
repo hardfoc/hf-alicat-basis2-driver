@@ -11,15 +11,22 @@
  *            std::size_t read(uint8_t* out, std::size_t max, uint32_t timeout_ms);
  *            void flush_rx();
  *
- *          Optionally:
+ *          and, optionally, two hooks the base class finds at compile time:
  *
- *            void delay_ms(uint32_t ms);   // defaults to busy-wait via while().
- *            void log(const char* tag, const char* fmt, ...);   // optional
+ *            void delay_ms_impl(uint32_t ms);                      // sleep >= ms
+ *            void log_impl(const char* tag, const char* fmt, ...); // printf-style
  *
- *          The Modbus-RTU spec mandates a ≥ 3.5-character idle gap between
- *          frames. Concrete adapters should map RS-485 DE/RE handling
- *          (when needed) onto the underlying UART driver's RS-485 mode
- *          before passing the adapter to the BASIS-2 driver.
+ *          Without `delay_ms_impl`, `delay_ms()` does nothing: portable code
+ *          has no time base to busy-wait on. The driver calls `delay_ms()`
+ *          before every request to leave the Modbus-RTU 3.5-character idle
+ *          gap (Modbus over Serial Line V1.02, section 2.5.1.1), so a port
+ *          without the hook must leave the gap itself (in `write()` or in the
+ *          UART). Without `log_impl`, `log()` does nothing; the driver logs
+ *          every failed transaction through it.
+ *
+ *          Concrete adapters should map RS-485 DE/RE handling (when needed)
+ *          onto the underlying UART driver's RS-485 mode before passing the
+ *          adapter to the BASIS-2 driver.
  *
  * @copyright Copyright (c) 2026 HardFOC. All rights reserved.
  */
@@ -65,8 +72,12 @@ public:
     }
 
     /**
-     * @brief Sleep `ms` milliseconds. Default implementation is a no-op;
-     *        adapters that have a sleep primitive should override.
+     * @brief Sleep at least `ms` milliseconds.
+     *
+     * Calls `Derived::delay_ms_impl(ms)` when the adapter has one (public, or
+     * private with `friend class UartInterface<Derived>`; any cv/ref
+     * qualifier). Otherwise a no-op: there is no portable time base to
+     * busy-wait on.
      */
     void delay_ms(uint32_t ms) noexcept {
         if constexpr (HasDelay<Derived>::value) {
@@ -77,18 +88,41 @@ public:
     }
 
     /**
-     * @brief Optional structured logging hook. Default is no-op.
+     * @brief Optional logging hook, printf-style.
+     *
+     * Forwards `tag`, `fmt` and the arguments unchanged to
+     * `Derived::log_impl(tag, fmt, args...)` when the adapter has one;
+     * otherwise a no-op. The driver logs every failed transaction here with
+     * the tag `"alicat_basis2"`; `fmt` is always a string literal.
      */
-    void log(const char* tag, const char* fmt, ...) noexcept {
-        (void)tag; (void)fmt;
+    template <typename... Args>
+    void log(const char* tag, const char* fmt, Args... args) noexcept {
+      if constexpr (HasLog<Derived, Args...>::value) {
+        static_cast<Derived*>(this)->log_impl(tag, fmt, args...);
+      } else {
+        (void)tag;
+        (void)fmt;
+        ((void)args, ...);
+      }
     }
 
 private:
     template <typename, typename = void>
     struct HasDelay : std::false_type {};
     template <typename T>
-    struct HasDelay<T, std::void_t<decltype(std::declval<T>().delay_ms_impl(0U))>>
+    struct HasDelay<T, std::void_t<decltype(std::declval<T&>().delay_ms_impl(uint32_t{0}))>>
         : std::true_type {};
+
+    template <typename T, typename Void, typename... Args>
+    struct HasLogImpl : std::false_type {};
+    template <typename T, typename... Args>
+    struct HasLogImpl<T,
+                      std::void_t<decltype(std::declval<T&>().log_impl(
+                          static_cast<const char*>(nullptr), static_cast<const char*>(nullptr),
+                          std::declval<Args>()...))>,
+                      Args...> : std::true_type {};
+    template <typename T, typename... Args>
+    using HasLog = HasLogImpl<T, void, Args...>;
 };
 
 }  // namespace alicat_basis2
