@@ -19,6 +19,7 @@ ctest --test-dir build-host --output-on-failure
 | --- | --- |
 | [`tests/test_modbus.cpp`](../tests/test_modbus.cpp) | CRC-16 against the Modbus specification example, request builders, reply parsing |
 | [`tests/test_driver.cpp`](../tests/test_driver.cpp) | Identity, live data scaling, setpoint encoding, magic values, range checks, address change, errors, discovery |
+| [`tests/test_hooks.cpp`](../tests/test_hooks.cpp) | The optional port hooks `delay_ms_impl()` and `log_impl()`, the driver's failure logs |
 | [`tests/mock_basis2.hpp`](../tests/mock_basis2.hpp) | The instrument model |
 
 ## Documentation snippets

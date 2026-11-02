@@ -13,6 +13,7 @@ add_executable(hf_alicat_basis2_host_tests
   test_main.cpp
   test_modbus.cpp
   test_driver.cpp
+  test_hooks.cpp
 )
 
 target_link_libraries(hf_alicat_basis2_host_tests PRIVATE ${HF_ALICAT_BASIS2_TARGET_NAME})

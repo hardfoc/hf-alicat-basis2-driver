@@ -12,9 +12,12 @@
 #include "alicat_basis2.hpp"
 
 #include <algorithm>
+#include <cstdarg>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <map>
+#include <string>
 #include <vector>
 
 class MockBasis2 : public alicat_basis2::UartInterface<MockBasis2> {
@@ -45,6 +48,16 @@ public:
 
   void flush_rx() noexcept { rx_.clear(); }
 
+  // Optional hook: record what the driver logs.
+  void log_impl(const char* tag, const char* fmt, ...) noexcept {
+    char buf[160];
+    va_list ap;
+    va_start(ap, fmt);
+    std::vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    logs.push_back(std::string(tag) + ": " + buf);
+  }
+
   // --- Test controls ----------------------------------------------------------------------------
 
   std::map<uint16_t, uint16_t> regs;          ///< Holding registers the instrument implements.
@@ -52,6 +65,7 @@ public:
   bool corrupt_crc = false;                   ///< Flip a CRC bit in the next replies.
   unsigned timeouts = 0;                      ///< read() calls that waited the full timeout.
   unsigned long waited_ms = 0;                ///< Total time read() spent waiting for bytes.
+  std::vector<std::string> logs;              ///< Every line the driver logged.
   uint8_t address;                            ///< Modbus address the mock answers to.
 
 private:

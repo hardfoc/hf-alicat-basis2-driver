@@ -552,6 +552,7 @@ public:
         const uint8_t saved_addr     = address_;
         const uint16_t saved_timeout = timeout_ms_;
         timeout_ms_ = probe_timeout_ms;
+        quiet_ = true; // silent addresses are expected: do not log each timeout
 
         uint8_t found = 0;
         for (uint16_t a = first_addr; a <= last_addr; ++a) {
@@ -566,6 +567,7 @@ public:
 
         address_    = saved_addr;
         timeout_ms_ = saved_timeout;
+        quiet_ = false;
         return DriverResult<uint8_t>::success(found);
     }
 
@@ -593,10 +595,11 @@ public:
 
         SendRequest(tx.data(), tx_len);
         std::size_t got = 0;
-        const DriverError rc = ReceiveReply(reg::fn::ReadHolding, rx.data(), need, got);
-        if (rc != DriverError::None)
-          return rc;
-        return modbus::ParseReadHolding(rx.data(), got, address_, count, out);
+        DriverError rc = ReceiveReply(reg::fn::ReadHolding, rx.data(), need, got);
+        if (rc == DriverError::None) {
+          rc = modbus::ParseReadHolding(rx.data(), got, address_, count, out);
+        }
+        return LogFailure(rc, reg::fn::ReadHolding, reg_addr);
     }
 
     /**
@@ -618,11 +621,11 @@ public:
 
         std::array<uint8_t, 8> rx{};
         std::size_t got = 0;
-        const DriverError rc = ReceiveReply(reg::fn::WriteSingle, rx.data(), rx.size(), got);
-        if (rc != DriverError::None)
-          return DriverResult<void>::failure(rc);
-        return DriverResult<void>{ modbus::ParseWriteSingleEcho(rx.data(), got,
-                                                                tx.data(), tx_len) };
+        DriverError rc = ReceiveReply(reg::fn::WriteSingle, rx.data(), rx.size(), got);
+        if (rc == DriverError::None) {
+          rc = modbus::ParseWriteSingleEcho(rx.data(), got, tx.data(), tx_len);
+        }
+        return DriverResult<void>{LogFailure(rc, reg::fn::WriteSingle, reg_addr)};
     }
 
     /**
@@ -647,11 +650,11 @@ public:
 
         std::array<uint8_t, 8> rx{};
         std::size_t got = 0;
-        const DriverError rc = ReceiveReply(reg::fn::WriteMultiple, rx.data(), rx.size(), got);
-        if (rc != DriverError::None)
-          return DriverResult<void>::failure(rc);
-        return DriverResult<void>{ modbus::ParseWriteMultipleEcho(rx.data(), got,
-                                                                  address_, reg_addr, count) };
+        DriverError rc = ReceiveReply(reg::fn::WriteMultiple, rx.data(), rx.size(), got);
+        if (rc == DriverError::None) {
+          rc = modbus::ParseWriteMultipleEcho(rx.data(), got, address_, reg_addr, count);
+        }
+        return DriverResult<void>{LogFailure(rc, reg::fn::WriteMultiple, reg_addr)};
     }
 
     /**
@@ -665,6 +668,25 @@ public:
     }
 
 private:
+  /// Tag passed to `UartInterface::log()`.
+  static constexpr const char* kLogTag = "alicat_basis2";
+
+  /// Report a failed transaction through the port's optional `log()` hook; returns `rc`.
+  DriverError LogFailure(DriverError rc, uint8_t fn, uint16_t reg_addr) noexcept {
+    if (rc == DriverError::None || quiet_) {
+      return rc;
+    }
+    if (rc == DriverError::ModbusException) {
+      uart_.log(kLogTag, "addr %u fn 0x%02X reg %u: ModbusException %s",
+                static_cast<unsigned>(address_), static_cast<unsigned>(fn),
+                static_cast<unsigned>(reg_addr), ToString(last_exception_).data());
+    } else {
+      uart_.log(kLogTag, "addr %u fn 0x%02X reg %u: %s", static_cast<unsigned>(address_),
+                static_cast<unsigned>(fn), static_cast<unsigned>(reg_addr), ToString(rc).data());
+    }
+    return rc;
+  }
+
   /// Start a transaction: drop stale RX bytes, then send the request.
   void SendRequest(const uint8_t* tx, std::size_t tx_len) noexcept {
     last_exception_ = ModbusExceptionCode::None;
@@ -723,6 +745,7 @@ private:
     uint8_t   address_;
     uint16_t  timeout_ms_;
     ModbusExceptionCode last_exception_{ModbusExceptionCode::None};
+    bool quiet_{false}; ///< No failure logs (the address sweep expects timeouts).
 };
 
 }  // namespace alicat_basis2

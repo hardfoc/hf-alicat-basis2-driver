@@ -10,6 +10,7 @@
 
 #include "alicat_basis2.hpp"
 
+#include <cstdarg>
 #include <cstddef>
 #include <cstdint>
 
@@ -18,7 +19,8 @@ void platform_uart_write(const uint8_t* data, std::size_t len) noexcept;  // blo
 // Returns when `max` bytes arrived or `timeout_ms` passed, with the number of bytes read.
 std::size_t platform_uart_read(uint8_t* out, std::size_t max, uint32_t timeout_ms) noexcept;
 void platform_uart_flush_rx() noexcept;
-void platform_delay_ms(uint32_t ms) noexcept;
+void platform_delay_ms(uint32_t ms) noexcept; // sleeps at least `ms`
+void platform_log(const char* tag, const char* fmt, va_list ap) noexcept;
 
 // --8<-- [start:port]
 class MyUart : public alicat_basis2::UartInterface<MyUart> {
@@ -36,7 +38,15 @@ public:
   // Drop stale bytes (a late reply, line noise) before the next request.
   void flush_rx() noexcept { platform_uart_flush_rx(); }
 
-  // Optional: a real sleep for UartInterface::delay_ms().
+  // Optional: a real sleep (at least `ms`) for UartInterface::delay_ms().
   void delay_ms_impl(uint32_t ms) noexcept { platform_delay_ms(ms); }
+
+  // Optional: where the driver's failure logs go (printf-style).
+  void log_impl(const char* tag, const char* fmt, ...) noexcept {
+    va_list ap;
+    va_start(ap, fmt);
+    platform_log(tag, fmt, ap);
+    va_end(ap);
+  }
 };
 // --8<-- [end:port]

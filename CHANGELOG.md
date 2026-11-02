@@ -28,6 +28,13 @@ affected API.
   **BREAKING (behaviour)** for code that relied on the old `num_samples_collected` value. (Manual Rev 4,
   "Measurement Data Registers", pp. 22-23.)
 
+- The optional port hooks did not do what their documentation said. `UartInterface::log()` was a no-op that no
+  port could hook into and the driver never logged; it now forwards (as a variadic template) to an optional
+  `log_impl(tag, fmt, ...)` in the port, and the driver logs every failed transaction through it (tag
+  `alicat_basis2`; the address sweep stays quiet). `delay_ms()` missed a ref-qualified `delay_ms_impl()`; it is
+  found now. The header said a port without `delay_ms_impl()` gets a busy-wait: that was wrong (portable code has
+  no time base to busy-wait on) and the documentation now says it is a no-op, as the code does.
+
 ### Changed
 
 - `reg::MeasurementPrevAvgFlowLow` is deprecated: 4214 is the high register. Use `reg::MeasurementPrevAvgFlow`.

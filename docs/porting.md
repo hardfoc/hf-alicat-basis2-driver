@@ -24,7 +24,13 @@ calls are resolved at compile time, so there are no virtual functions, no vtable
 | `write(const uint8_t* data, std::size_t length)` | yes | Send all `length` bytes; return once they are accepted by the UART (better: on the wire) |
 | `read(uint8_t* out, std::size_t max, uint32_t timeout_ms)` | yes | Return when `max` bytes arrived or `timeout_ms` passed; the return value is the number of bytes in `out` |
 | `flush_rx()` | yes | Discard every byte already received |
-| `delay_ms_impl(uint32_t ms)` | optional | Sleep; `UartInterface::delay_ms()` calls it when present and does nothing otherwise |
+| `delay_ms_impl(uint32_t ms)` | optional | Sleep at least `ms`; `UartInterface::delay_ms()` calls it when present and does nothing otherwise (there is no portable time base for a busy-wait) |
+| `log_impl(const char* tag, const char* fmt, ...)` | optional | printf-style log line; `UartInterface::log()` forwards the tag, format and arguments to it when present and does nothing otherwise |
+
+The base class finds the optional hooks at compile time, public or private (with
+`friend class alicat_basis2::UartInterface<Self>;`). The driver logs every failed transaction through `log()`
+with the tag `alicat_basis2`, for example `addr 1 fn 0x06 reg 514: ModbusException IllegalDataAddress`; the
+address sweep stays quiet.
 
 The driver calls `flush_rx()`, then `write()`, then `read()` twice for every request: once for the first 3 bytes
 of the reply, then for the rest. The first 3 bytes tell a normal reply from a 5-byte exception reply (bit 7 of the
