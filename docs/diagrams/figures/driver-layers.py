@@ -25,7 +25,7 @@ def data():
     mb = (ROOT / MODBUS).read_text()
     framing = re.findall(r"^inline \S+ (Build\w+|Parse\w+)\(", mb, re.M)
     uart = (ROOT / UART).read_text()
-    hooks = [h for h in ("write", "read", "flush_rx", "delay_ms_impl") if re.search(rf"\b{h}\(", uart)]
+    hooks = [h for h in ("write", "read", "flush_rx", "delay_ms_impl", "log_impl") if re.search(rf"\b{h}\(", uart)]
     return {
         "calls": calls,
         "framing": framing,

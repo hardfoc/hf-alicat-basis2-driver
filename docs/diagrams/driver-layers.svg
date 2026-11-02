@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="977" viewBox="0 0 1200 977" role="img" aria-labelledby="driver-layers-title driver-layers-desc" font-family="Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1001" viewBox="0 0 1200 1001" role="img" aria-labelledby="driver-layers-title driver-layers-desc" font-family="Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
 <title id="driver-layers-title">Three layers, one of them yours</title>
 <desc id="driver-layers-desc">Layer diagram: the application calls the hardware-agnostic BASIS-2 driver, which builds Modbus-RTU frames with a CRC-16, which go through the serial interface your platform port implements, which drives the UART, the RS-485 or RS-232 transceiver and the BASIS-2 instruments on the bus.</desc>
 <defs><marker id="fk-arrow-rail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8893A2"/></marker></defs>
-<rect x="0.5" y="0.5" width="1199" height="976" rx="16" fill="#FFFFFF" stroke="#E2E7EE"/>
+<rect x="0.5" y="0.5" width="1199" height="1000" rx="16" fill="#FFFFFF" stroke="#E2E7EE"/>
 <text x="32" y="46.8" font-size="16" font-weight="700" letter-spacing="1.2" fill="#3730A3">ARCHITECTURE</text>
 <text x="32" y="85.6" font-size="32" font-weight="700" fill="#17202C">Three layers, one of them yours</text>
 <text x="32" y="115.4" font-size="18" fill="#566070">The driver and the framing are the same on every MCU. The port is a small class with three methods.</text>
@@ -10,16 +10,16 @@
 <rect x="32" y="278.4" width="1136" height="225" rx="16" fill="#EEF0FF" stroke="#C7CBF8" stroke-width="1.2"/>
 <path d="M600 242.4 L600 274.4" fill="none" stroke="#8893A2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fk-arrow-rail)"/>
 <path d="M600 507.4 L600 539.4" fill="none" stroke="#8893A2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fk-arrow-rail)"/>
-<path d="M600 661.4 L600 693.4" fill="none" stroke="#8893A2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fk-arrow-rail)"/>
-<path d="M600 789.4 L600 821.4" fill="none" stroke="#8893A2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fk-arrow-rail)"/>
+<path d="M600 685.4 L600 717.4" fill="none" stroke="#8893A2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fk-arrow-rail)"/>
+<path d="M600 813.4 L600 845.4" fill="none" stroke="#8893A2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fk-arrow-rail)"/>
 <rect x="32" y="149.4" width="1136" height="89" rx="12" fill="#FFFFFF" stroke="#C9D1DB" stroke-width="1"/>
 <rect x="32" y="157.4" width="4" height="73" rx="2" fill="#64748B"/>
-<rect x="32" y="543.4" width="1136" height="114" rx="12" fill="#EEF0FF" stroke="#4F46E5" stroke-width="1.4"/>
-<rect x="32" y="551.4" width="4" height="98" rx="2" fill="#4F46E5"/>
-<rect x="32" y="697.4" width="1136" height="88" rx="12" fill="#E6F6F4" stroke="#0F8B80" stroke-width="1.4"/>
-<rect x="32" y="705.4" width="4" height="72" rx="2" fill="#0F8B80"/>
-<rect x="32" y="825.4" width="1136" height="89" rx="12" fill="#FFFFFF" stroke="#C9D1DB" stroke-width="1"/>
-<rect x="32" y="833.4" width="4" height="73" rx="2" fill="#64748B"/>
+<rect x="32" y="543.4" width="1136" height="138" rx="12" fill="#EEF0FF" stroke="#4F46E5" stroke-width="1.4"/>
+<rect x="32" y="551.4" width="4" height="122" rx="2" fill="#4F46E5"/>
+<rect x="32" y="721.4" width="1136" height="88" rx="12" fill="#E6F6F4" stroke="#0F8B80" stroke-width="1.4"/>
+<rect x="32" y="729.4" width="4" height="72" rx="2" fill="#0F8B80"/>
+<rect x="32" y="849.4" width="1136" height="89" rx="12" fill="#FFFFFF" stroke="#C9D1DB" stroke-width="1"/>
+<rect x="32" y="857.4" width="4" height="73" rx="2" fill="#64748B"/>
 <text x="56" y="184.4" font-size="20" font-weight="700" fill="#17202C">Your application</text>
 <text x="56" y="215" font-size="17" fill="#2B3442">one Driver per instrument: read flow, command setpoints, tare</text>
 <rect x="48" y="323.4" width="176.4" height="26" rx="13" fill="#EEF0FF" stroke="#C7CBF8" stroke-width="1"/>
@@ -74,15 +74,16 @@
 <text x="326.2" y="307.4" font-size="16" fill="#3730A3">Driver&lt;UartT&gt;, inc/alicat_basis2.hpp</text>
 <text x="56" y="578.4" font-size="20" font-weight="700" fill="#3730A3">Modbus-RTU framing</text>
 <text x="56" y="609" font-size="17" fill="#2B3442">functions 03, 06 and 16, CRC-16 on every frame, replies checked against the request:</text>
-<text x="56" y="633.7" font-size="17" fill="#2B3442">BuildReadHolding  BuildWriteSingle  BuildWriteMultiple  ParseReadHolding  ParseWriteSingleEcho  ParseWriteMultipleEcho</text>
-<text x="56" y="732.4" font-size="20" font-weight="700" fill="#115E59">Platform port (your class, derived from UartInterface)</text>
-<text x="56" y="761.6" font-size="16" font-family="'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace" fill="#2B3442">write()  read()  flush_rx()  delay_ms_impl()</text>
-<text x="56" y="860.4" font-size="20" font-weight="700" fill="#17202C">UART, transceiver, BASIS-2 instruments</text>
-<text x="56" y="891" font-size="17" fill="#2B3442">RS-485 multidrop (addresses 1 to 247) or RS-232, 8N1, 4800 to 115200 baud</text>
-<rect x="32" y="926.8" width="14" height="14" rx="4" fill="#EEF0FF" stroke="#4F46E5" stroke-width="1.4"/>
-<text x="54" y="941.4" font-size="16" fill="#566070">this library</text>
-<rect x="161.8" y="926.8" width="14" height="14" rx="4" fill="#E6F6F4" stroke="#0F8B80" stroke-width="1.4"/>
-<text x="183.8" y="941.4" font-size="16" fill="#566070">you write</text>
-<rect x="282.1" y="926.8" width="14" height="14" rx="4" fill="#F1F4F8" stroke="#64748B" stroke-width="1.4"/>
-<text x="304.1" y="941.4" font-size="16" fill="#566070">hardware</text>
+<text x="56" y="633.7" font-size="17" fill="#2B3442">BuildReadHolding  BuildWriteSingle  BuildWriteMultiple  ParseException  ParseReadHolding  ParseWriteSingleEcho </text>
+<text x="56" y="658.3" font-size="17" fill="#2B3442">ParseWriteMultipleEcho</text>
+<text x="56" y="756.4" font-size="20" font-weight="700" fill="#115E59">Platform port (your class, derived from UartInterface)</text>
+<text x="56" y="785.6" font-size="16" font-family="'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace" fill="#2B3442">write()  read()  flush_rx()  delay_ms_impl()  log_impl()</text>
+<text x="56" y="884.4" font-size="20" font-weight="700" fill="#17202C">UART, transceiver, BASIS-2 instruments</text>
+<text x="56" y="915" font-size="17" fill="#2B3442">RS-485 multidrop (addresses 1 to 247) or RS-232, 8N1, 4800 to 115200 baud</text>
+<rect x="32" y="950.8" width="14" height="14" rx="4" fill="#EEF0FF" stroke="#4F46E5" stroke-width="1.4"/>
+<text x="54" y="965.4" font-size="16" fill="#566070">this library</text>
+<rect x="161.8" y="950.8" width="14" height="14" rx="4" fill="#E6F6F4" stroke="#0F8B80" stroke-width="1.4"/>
+<text x="183.8" y="965.4" font-size="16" fill="#566070">you write</text>
+<rect x="282.1" y="950.8" width="14" height="14" rx="4" fill="#F1F4F8" stroke="#64748B" stroke-width="1.4"/>
+<text x="304.1" y="965.4" font-size="16" fill="#566070">hardware</text>
 </svg>

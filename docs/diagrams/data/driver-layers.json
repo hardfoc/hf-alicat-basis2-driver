@@ -29,6 +29,7 @@
     "BuildReadHolding",
     "BuildWriteSingle",
     "BuildWriteMultiple",
+    "ParseException",
     "ParseReadHolding",
     "ParseWriteSingleEcho",
     "ParseWriteMultipleEcho"
@@ -37,7 +38,8 @@
     "write",
     "read",
     "flush_rx",
-    "delay_ms_impl"
+    "delay_ms_impl",
+    "log_impl"
   ],
   "sources": [
     "inc/alicat_basis2.hpp:Driver members",
