@@ -415,30 +415,45 @@ public:
 
     /**
      * @brief Read the current / most-recent measurement window result.
+     *
+     * One request reads registers 4201..4215 (manual Rev 4, "Measurement
+     * Data Registers", pp. 22-23). The previous window's average flow is the
+     * signed 32-bit value at 4214-4215, high register first.
+     *
+     * @param flow_decimals  The instrument's factory-set flow decimals, used
+     *                       for `avg_flow` (as in `ReadInstantaneous()`).
      * @return `DriverResult<MeasurementData>` populated with min / max /
      *         average temperature and flow on success; transport /
      *         Modbus error on failure.
+     * @note  With `MeasurementTrigger::OnAverageFlowRead` set, reading the
+     *        low register 4215 starts the next measurement window.
      */
-    DriverResult<MeasurementData> ReadMeasurement() noexcept {
-        std::array<uint16_t, 14> regs{};  // 4201..4214
-        const auto rc = ReadHoldingRegisters(reg::MeasurementSampleCount, regs.data(),
-                                             static_cast<uint8_t>(regs.size()));
-        if (rc != DriverError::None) return DriverResult<MeasurementData>::failure(rc);
+    DriverResult<MeasurementData> ReadMeasurement(uint8_t flow_decimals = 3) noexcept {
+      constexpr uint16_t kFirst = reg::MeasurementSampleCount;                             // 4201
+      constexpr uint16_t kLast = reg::MeasurementPrevAvgFlow + reg::kPrevAvgFlowCount - 1; // 4215
+      std::array<uint16_t, kLast - kFirst + 1> regs{};
+      const auto rc = ReadHoldingRegisters(kFirst, regs.data(), static_cast<uint8_t>(regs.size()));
+      if (rc != DriverError::None)
+        return DriverResult<MeasurementData>::failure(rc);
+      const auto at = [&regs](uint16_t r) { return regs[r - kFirst]; };
 
-        MeasurementData out{};
-        out.num_samples_collected = regs[0];                // 4201 actually holds sample count we wrote
-        out.min_temperature_raw   = static_cast<int16_t>(regs[1]);
-        out.max_temperature_raw   = static_cast<int16_t>(regs[2]);
-        out.min_flow_raw          = static_cast<int16_t>(regs[3]);
-        out.max_flow_raw          = static_cast<int16_t>(regs[4]);
-        out.avg_temperature_raw   = static_cast<int16_t>(regs[6]);
-        out.avg_flow_raw          = static_cast<int16_t>(regs[7]);
-        out.prev_avg_flow_raw     =
-            (static_cast<int32_t>(static_cast<int16_t>(regs[12])) << 16) | regs[13];
-        out.min_temperature_c = static_cast<float>(out.min_temperature_raw) * 0.01f;
-        out.max_temperature_c = static_cast<float>(out.max_temperature_raw) * 0.01f;
-        out.avg_temperature_c = static_cast<float>(out.avg_temperature_raw) * 0.01f;
-        return DriverResult<MeasurementData>::success(out);
+      MeasurementData out{};
+      out.num_samples_requested = at(reg::MeasurementSampleCount);
+      out.num_samples_collected = at(reg::MeasurementSamplesAveraged);
+      out.min_temperature_raw = static_cast<int16_t>(at(reg::MeasurementMinTemp));
+      out.max_temperature_raw = static_cast<int16_t>(at(reg::MeasurementMaxTemp));
+      out.min_flow_raw = static_cast<int16_t>(at(reg::MeasurementMinFlow));
+      out.max_flow_raw = static_cast<int16_t>(at(reg::MeasurementMaxFlow));
+      out.avg_temperature_raw = static_cast<int16_t>(at(reg::MeasurementAvgTemp));
+      out.avg_flow_raw = static_cast<int16_t>(at(reg::MeasurementAvgFlow));
+      out.prev_avg_flow_raw =
+          static_cast<int32_t>((static_cast<uint32_t>(at(reg::MeasurementPrevAvgFlow)) << 16) |
+                               at(reg::MeasurementPrevAvgFlow + 1));
+      out.min_temperature_c = static_cast<float>(out.min_temperature_raw) * 0.01f;
+      out.max_temperature_c = static_cast<float>(out.max_temperature_raw) * 0.01f;
+      out.avg_temperature_c = static_cast<float>(out.avg_temperature_raw) * 0.01f;
+      out.avg_flow = ScaleFlow(out.avg_flow_raw, flow_decimals);
+      return DriverResult<MeasurementData>::success(out);
     }
 
     //==========================================================================

@@ -81,10 +81,14 @@ void measurement(Driver& controller) {
   controller.ConfigureMeasurementTrigger(al::MeasurementTrigger::OnDigitalSetpointChange);
   controller.StartMeasurementSamples(400);   // 400 samples at about 2.5 ms: about 1 s
   // ... wait at least as long as the window ...
-  const auto m = controller.ReadMeasurement();
+  const auto m = controller.ReadMeasurement(3); // 3: the same flow decimals as live data
   if (m.ok()) {
-    std::printf("min %d max %d avg %d (raw flow), avg %.2f C\n", m.value.min_flow_raw,
-                m.value.max_flow_raw, m.value.avg_flow_raw, static_cast<double>(m.value.avg_temperature_c));
+    std::printf("%u samples: min %d max %d (raw flow), avg flow %.3f, avg %.2f C\n",
+                m.value.num_samples_collected, m.value.min_flow_raw, m.value.max_flow_raw,
+                static_cast<double>(m.value.avg_flow),
+                static_cast<double>(m.value.avg_temperature_c));
+    std::printf("previous window: avg flow %ld (raw)\n",
+                static_cast<long>(m.value.prev_avg_flow_raw));
   }
   // --8<-- [end:measurement]
 }

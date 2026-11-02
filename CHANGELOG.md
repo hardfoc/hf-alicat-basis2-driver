@@ -20,8 +20,17 @@ affected API.
   `ModbusException`. (Modbus Application Protocol V1.1b3, section 7; manual Rev 4, "Communicating Via
   Modbus-RTU", p. 18.)
 
+- `ReadMeasurement()` decoded the previous window's average flow from registers 4213-4214 (the previous average
+  temperature and the high half of the flow). The manual gives it as a signed 4-byte integer at 4214, so it is now
+  read from 4214-4215 (high register first) and the request covers 4201 to 4215. `num_samples_collected` now
+  reports register 4206 (samples averaged) as its name says, not 4201 (samples requested, now
+  `num_samples_requested`), and `avg_flow` is filled in using the new `flow_decimals` argument (default 3).
+  **BREAKING (behaviour)** for code that relied on the old `num_samples_collected` value. (Manual Rev 4,
+  "Measurement Data Registers", pp. 22-23.)
+
 ### Changed
 
+- `reg::MeasurementPrevAvgFlowLow` is deprecated: 4214 is the high register. Use `reg::MeasurementPrevAvgFlow`.
 - Documentation moved to the HardFOC MkDocs platform: new page set (quickstart, hardware, architecture, API guide,
   configuration, porting, testing), code snippets compiled by the host build from `tests/docs/`, Doxygen under
   `/api/`, versioned with mike. The Jekyll site files and the doxygen-awesome submodule are gone.

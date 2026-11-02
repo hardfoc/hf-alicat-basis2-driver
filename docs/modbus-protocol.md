@@ -66,7 +66,7 @@ The setpoint write is always value / 1000, whatever the decimals.
 
 | Register | Contents |
 | --- | --- |
-| 4200 (R/W) | Trigger (controllers): +1 on a digital setpoint change, +2 on a valve-hold change, +4 when 4214 is read |
+| 4200 (R/W) | Trigger (controllers): +1 on a digital setpoint change, +2 on a valve-hold change, +4 when the low register of the previous average flow (4215) is read |
 | 4201 (R/W) | Samples to take, about 2.5 ms each; a write starts a new window |
 | 4202, 4203 (R) | Minimum and maximum temperature, value / 100 = °C |
 | 4204, 4205 (R) | Minimum and maximum flow, signed 16-bit, factory-set decimals |
@@ -74,10 +74,12 @@ The setpoint write is always value / 1000, whatever the decimals.
 | 4207, 4208 (R) | Average temperature and average flow |
 | 4209 (R) | Valve drive, value / 100 = % |
 | 4210 to 4213 (R) | Previous window: minimum and maximum flow, samples, average temperature |
-| 4214 (R) | Previous window's average flow, signed 32-bit |
+| 4214-4215 (R) | Previous window's average flow, signed 32-bit, high register first |
 
 `StartMeasurementSamples()` writes 4201, `ConfigureMeasurementTrigger()` writes 4200 and `ReadMeasurement()`
-reads 4201 to 4214.
+reads 4201 to 4215 in one request. The manual gives the previous average flow as a 4-byte integer at 4214, so it
+fills 4214 and 4215 like every other 32-bit value; `prev_avg_flow_raw` is decoded from both.
+`num_samples_collected` is 4206 (samples averaged so far), `num_samples_requested` is 4201.
 
 ## Configuration and function registers
 

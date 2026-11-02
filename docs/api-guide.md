@@ -89,7 +89,9 @@ is lost. `SetTotalizerBatch()` takes the volume already scaled to the total-volu
 ```
 
 The instrument samples about every 2.5 ms. Writing the sample count starts a new window and moves the running one
-into the "previous" registers. Use the raw minimum, maximum and average flow with the same decimals as live flow.
+into the "previous" registers. `ReadMeasurement(decimals)` reads registers 4201 to 4215 in one request and scales
+`avg_flow` by the same decimals as live flow; scale the raw minimum, maximum and previous average flow
+(`prev_avg_flow_raw`, 32-bit at 4214-4215) the same way.
 
 ## Find and readdress instruments
 

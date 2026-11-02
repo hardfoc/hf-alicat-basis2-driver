@@ -321,22 +321,24 @@ struct InstantaneousData {
 };
 
 /**
- * @brief Decoded measurement-window result (registers 4200..4214).
+ * @brief Decoded measurement-window result (registers 4201..4215).
  */
 struct MeasurementData {
-    uint16_t  num_samples_collected{0};
-    int16_t   min_temperature_raw{0};
-    int16_t   max_temperature_raw{0};
-    int16_t   min_flow_raw{0};
-    int16_t   max_flow_raw{0};
-    int16_t   avg_temperature_raw{0};
-    int16_t   avg_flow_raw{0};
-    int32_t   prev_avg_flow_raw{0};
+  uint16_t num_samples_collected{0}; ///< Register 4206: samples averaged so far.
+  int16_t min_temperature_raw{0};
+  int16_t max_temperature_raw{0};
+  int16_t min_flow_raw{0};
+  int16_t max_flow_raw{0};
+  int16_t avg_temperature_raw{0};
+  int16_t avg_flow_raw{0};
+  int32_t prev_avg_flow_raw{0}; ///< Registers 4214-4215, signed 32-bit.
 
-    float min_temperature_c{0.0f};
-    float max_temperature_c{0.0f};
-    float avg_temperature_c{0.0f};
-    float avg_flow{0.0f};
+  float min_temperature_c{0.0f};
+  float max_temperature_c{0.0f};
+  float avg_temperature_c{0.0f};
+  float avg_flow{0.0f}; ///< `avg_flow_raw` / 10^flow_decimals.
+
+  uint16_t num_samples_requested{0}; ///< Register 4201: samples to take.
 };
 
 /**

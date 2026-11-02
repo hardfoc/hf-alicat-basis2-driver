@@ -173,3 +173,37 @@ TEST_CASE("exception replies to writes are recognised by length and returned wit
   CHECK(d.GetLastException() == al::ModbusExceptionCode::None);
   CHECK_EQ(m.timeouts, 0U);
 }
+
+TEST_CASE("ReadMeasurement decodes 4201..4215; previous average flow is 32-bit at 4214-4215") {
+  // Manual Rev 4, "Measurement Data Registers", pp. 22-23.
+  MockBasis2 m = makeController();
+  m.regs[4201] = 400;  // samples to take
+  m.regs[4202] = 2400; // min temperature 24.00 C
+  m.regs[4203] = 2600; // max temperature 26.00 C
+  m.regs[4204] = static_cast<uint16_t>(-120);
+  m.regs[4205] = 980;
+  m.regs[4206] = 123;                        // samples averaged so far
+  m.regs[4207] = 2500;                       // average temperature 25.00 C
+  m.regs[4208] = static_cast<uint16_t>(-50); // average flow, signed 16-bit
+  m.regs[4213] = 2450;                       // previous average temperature
+  m.regs[4214] = 0x0001;                     // previous average flow, high register
+  m.regs[4215] = 0x86A0;                     // low register: 0x000186A0 = 100000
+  al::Driver<MockBasis2> d(m, 1);
+  const auto r = d.ReadMeasurement(2);
+  REQUIRE(r.ok());
+  CHECK_EQ(m.requests.size(), 1U);
+  CHECK_EQ(m.requests[0][2] << 8 | m.requests[0][3], 4201);
+  CHECK_EQ(m.requests[0][5], 15); // 4201..4215
+  CHECK_EQ(r.value.num_samples_requested, 400);
+  CHECK_EQ(r.value.num_samples_collected, 123);
+  CHECK_EQ(r.value.min_flow_raw, -120);
+  CHECK_EQ(r.value.max_flow_raw, 980);
+  CHECK_EQ(r.value.avg_flow_raw, -50);
+  CHECK(r.value.avg_flow > -0.501f && r.value.avg_flow < -0.499f);
+  CHECK(r.value.avg_temperature_c > 24.99f && r.value.avg_temperature_c < 25.01f);
+  CHECK_EQ(r.value.prev_avg_flow_raw, 100000);
+
+  m.regs[4214] = 0xFFFF; // negative: -200
+  m.regs[4215] = 0xFF38;
+  CHECK_EQ(d.ReadMeasurement().value.prev_avg_flow_raw, -200);
+}

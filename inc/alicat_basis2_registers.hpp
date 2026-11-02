@@ -84,7 +84,12 @@ inline constexpr uint16_t MeasurementPrevMinFlow     = 4210;
 inline constexpr uint16_t MeasurementPrevMaxFlow     = 4211;
 inline constexpr uint16_t MeasurementPrevSamplesAvg  = 4212;
 inline constexpr uint16_t MeasurementPrevAvgTemp     = 4213;
-inline constexpr uint16_t MeasurementPrevAvgFlowLow  = 4214; // 2 regs (32-bit)
+/// Previous window's average flow: signed 32-bit at 4214-4215, high register first.
+inline constexpr uint16_t MeasurementPrevAvgFlow = 4214;
+inline constexpr uint16_t kPrevAvgFlowCount = 2;
+/// @deprecated Misnamed: 4214 is the *high* register of the 32-bit value. Use
+///             `MeasurementPrevAvgFlow`; the low register is 4215.
+inline constexpr uint16_t MeasurementPrevAvgFlowLow = MeasurementPrevAvgFlow;
 
 //==============================================================================
 // MODBUS FUNCTION CODES (we only use 3, 6, 16)
