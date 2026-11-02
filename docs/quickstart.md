@@ -1,11 +1,3 @@
----
-layout: default
-title: "🚀 Quick start"
-nav_order: 2
-parent: "📚 Documentation"
-permalink: /docs/quickstart/
----
-
 # Quick start
 
 The whole driver is parameterised on a CRTP adapter that owns the UART

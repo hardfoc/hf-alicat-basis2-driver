@@ -1,13 +1,3 @@
----
-layout: default
-title: "📚 Documentation"
-description: "Complete documentation for the HardFOC Alicat BASIS-2 driver"
-nav_order: 2
-parent: "HardFOC Alicat BASIS-2 Driver"
-permalink: /docs/
-has_children: true
----
-
 # HF-Alicat-BASIS2 documentation
 
 Welcome. This site mirrors the [`docs/`](https://github.com/hardfoc/hf-alicat-basis2-driver/tree/main/docs) folder in the repository and adds navigation, search, and diagrams for the **Alicat BASIS-2** mass-flow meter / controller (B-Series and BC-Series) driver.

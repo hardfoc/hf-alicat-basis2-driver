@@ -1,11 +1,3 @@
----
-layout: default
-title: "HardFOC Alicat BASIS-2 Driver"
-description: "Hardware-agnostic C++17 driver for Alicat BASIS-2 mass-flow meters and controllers (B-Series & BC-Series)"
-nav_order: 1
-permalink: /
----
-
 # HF-Alicat-BASIS2 Driver
 
 **Header-only C++17 driver for Alicat BASIS-2 mass-flow meters and controllers (B-Series & BC-Series) over Modbus-RTU**
@@ -15,18 +7,18 @@ permalink: /
 [![CI](https://github.com/hardfoc/hf-alicat-basis2-driver/actions/workflows/esp32-examples-build-ci.yml/badge.svg?branch=main)](https://github.com/hardfoc/hf-alicat-basis2-driver/actions/workflows/esp32-examples-build-ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://hardfoc.github.io/hf-alicat-basis2-driver/)
 
-## 📚 Table of Contents
-1. [Overview](#-overview)
-2. [Features](#-features)
-3. [Quick Start](#-quick-start)
-4. [Installation](#-installation)
-5. [API Reference](#-api-reference)
-6. [Examples](#-examples)
-7. [Documentation](#-documentation)
-8. [Contributing](#-contributing)
-9. [License](#-license)
+## Table of Contents
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Quick Start](#quick-start)
+4. [Installation](#installation)
+5. [API Reference](#api-reference)
+6. [Examples](#examples)
+7. [Documentation](#documentation)
+8. [Contributing](#contributing)
+9. [License](#license)
 
-## 📦 Overview
+## Overview
 
 > **📖 [📚🌐 Live Complete Documentation](https://hardfoc.github.io/hf-alicat-basis2-driver/)** —
 > Interactive guides, hardware diagrams, and step-by-step tutorials.
@@ -61,7 +53,7 @@ Each instrument carries a **Modbus address** (1..247) and an **ASCII unit_id** (
 Out of the factory **all instruments default to address 1 / unit `A`**. See
 [Hardware setup](docs/hardware_setup.md) for the first-bring-up procedure.
 
-## ✨ Features
+## Features
 
 - ✅ **Header-only C++17**: no static library required for the driver itself
 - ✅ **Hardware Agnostic**: CRTP `UartInterface<>` adapter, zero virtual dispatch
@@ -75,7 +67,7 @@ Out of the factory **all instruments default to address 1 / unit `A`**. See
 - ✅ **Stable error domain**: `DriverError` / `DriverResult<T>` (no exceptions)
 - ✅ **ESP-IDF Ready**: IDF component wrapper + minimal & full RS-485 examples
 
-## 🚀 Quick Start
+## Quick Start
 
 ```cpp
 #include "alicat_basis2.hpp"
@@ -111,7 +103,7 @@ if (auto live = meter.ReadInstantaneous(); live.ok()) {
 
 For detailed setup, see [Installation](docs/installation.md) and [Quick Start Guide](docs/quickstart.md).
 
-## 🔧 Installation
+## Installation
 
 1. **Clone or copy** the driver files into your project (header-only — no build step)
 2. **Implement the UART interface** for your platform (see [Platform Integration](docs/quickstart.md))
@@ -123,7 +115,7 @@ For detailed setup, see [Installation](docs/installation.md) and [Quick Start Gu
 
 For detailed installation instructions, see [docs/installation.md](docs/installation.md).
 
-## 📖 API Reference
+## API Reference
 
 ### Live data & identity
 
@@ -178,7 +170,7 @@ For detailed installation instructions, see [docs/installation.md](docs/installa
 
 For complete API documentation, see [docs/api_reference.md](docs/api_reference.md).
 
-## 📊 Examples
+## Examples
 
 | Example | Description |
 |---------|-------------|
@@ -189,7 +181,7 @@ For ESP32 build instructions, see the [examples/esp32](examples/esp32/) director
 
 Detailed example walkthroughs are available in [docs/examples.md](docs/examples.md).
 
-## 📚 Documentation
+## Documentation
 
 Complete documentation is available in the [docs directory](docs/index.md):
 
@@ -205,7 +197,7 @@ Complete documentation is available in the [docs directory](docs/index.md):
 | [🛠️ Troubleshooting](docs/troubleshooting.md) | Bus discovery flow, multi-baud normalisation, common errors |
 | [📄 Datasheet](docs/datasheet/DOC-MANUAL-BASIS2.pdf) | Bundled official manual (Rev 4, May 2025) |
 
-## 🔗 References
+## References
 
 | Resource | Link |
 |----------|------|
@@ -215,11 +207,11 @@ Complete documentation is available in the [docs directory](docs/index.md):
 | ESP-IDF UART RS-485 mode | <https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/peripherals/uart.html#rs485-mode> |
 | C++17 language reference | <https://en.cppreference.com/w/cpp/17> |
 
-## 🤝 Contributing
+## Contributing
 
 Pull requests and suggestions are welcome! Please follow the existing code style and include tests for new features.
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 

@@ -1,11 +1,3 @@
----
-layout: default
-title: "🧩 CMake integration"
-nav_order: 5
-parent: "📚 Documentation"
-permalink: /docs/cmake_integration/
----
-
 # CMake integration
 
 The driver ships a complete CMake project (`CMakeLists.txt` +

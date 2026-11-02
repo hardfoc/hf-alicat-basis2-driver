@@ -1,11 +1,3 @@
----
-layout: default
-title: "📖 API reference"
-nav_order: 6
-parent: "📚 Documentation"
-permalink: /docs/api_reference/
----
-
 # API reference
 
 The driver lives entirely in the `alicat_basis2` namespace; everything

@@ -1,11 +1,3 @@
----
-layout: default
-title: "📥 Installation"
-nav_order: 1
-parent: "📚 Documentation"
-permalink: /docs/installation/
----
-
 # Installation
 
 The driver is **header-only**. There is nothing to build, link or install

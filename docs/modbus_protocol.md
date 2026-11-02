@@ -1,11 +1,3 @@
----
-layout: default
-title: "📡 Modbus protocol"
-nav_order: 3
-parent: "📚 Documentation"
-permalink: /docs/modbus_protocol/
----
-
 # Modbus-RTU protocol
 
 The driver implements the **Modbus-RTU** subset that the Alicat BASIS-2
