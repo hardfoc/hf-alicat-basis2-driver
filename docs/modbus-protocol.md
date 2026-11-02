@@ -24,9 +24,10 @@ first 3 bytes of every reply; when bit 7 is set it reads the 2 CRC bytes, checks
 | `0x02` | `IllegalDataAddress` | The manual's "Bad Address": a register this model or firmware does not have |
 | `0x03` | `IllegalDataValue` | A value or register count the instrument does not accept |
 | `0x04` | `ServerDeviceFailure` | An error inside the instrument |
- The write-single echo carries the value the host sent, not the value the instrument
-stored: an out-of-range setpoint is adjusted inside the instrument but echoed unchanged. Read the register back
-when you need the stored value. Reading an undefined register may return 0 or an exception.
+
+The write-single echo carries the value the host sent, not the value the instrument stored: an out-of-range
+setpoint is adjusted inside the instrument but echoed unchanged. Read the register back when you need the stored
+value. Reading an undefined register may return 0 or an exception.
 
 ## Frame format
 
