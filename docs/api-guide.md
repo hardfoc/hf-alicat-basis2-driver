@@ -22,7 +22,7 @@ One `Driver<UartT>` object per instrument. Its calls fall into a few groups:
 | Measurement window | `ConfigureMeasurementTrigger()` (controllers), `StartMeasurementSamples()`, `ReadMeasurement()` | All |
 | Bus configuration | `SetModbusAddress()`, `SetAsciiUnitId()`, `SetBaudRate()`, `FactoryRestore()`, `DiscoverPresentAddresses()` | All |
 | Raw access | `ReadHoldingRegisters()`, `WriteSingleRegister()`, `WriteMultipleRegisters()` | All |
-| Driver settings | `SetAddress()`, `GetAddress()`, `SetTimeoutMs()`, `GetTimeoutMs()` | |
+| Driver settings | `SetAddress()`, `GetAddress()`, `SetTimeoutMs()`, `GetTimeoutMs()`, `SetBusBaudRate()`, `GetBusBaudRate()` | |
 
 Every call is `noexcept` and returns `DriverResult<T>` (`.ok()`, `.value`, `.error`) or, for the raw read, a bare
 `DriverError`. Check it: a failed call leaves `value` default-constructed.
@@ -119,7 +119,8 @@ top of each other.
 !!! warning "The instrument switches before it answers"
     The manual warns that the host must change its own rate in time to receive the confirmation, and may not.
     Treat the result of `SetBaudRate()` as unreliable, switch the host UART, then confirm with a read at the new
-    rate. If that fails, sweep the six rates to find the instrument again.
+    rate. If that fails, sweep the six rates to find the instrument again. `SetBaudRate()` also switches the
+    driver's inter-frame gap to the new rate; call `SetBusBaudRate()` on the other drivers that share the port.
 
 ## Use any register directly
 

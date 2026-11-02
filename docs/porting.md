@@ -49,9 +49,11 @@ function code), so the second `read()` asks for exactly the bytes still to come.
   gives the driver a partial frame: `InvalidFrame` or `BadCrc` that come and go.
 - **Return what you have at the timeout.** The return value must be the number of bytes that arrived; `0` is
   reported as `Timeout`.
-- **Leave the 3.5-character gap.** A new request must start at least 3.5 characters (1.75 ms above 19200 baud)
-  after the previous reply ended ([Hardware](hardware.md#timing)). A read that returns on the last byte followed at
-  once by the next call's `write()` can break it; wait in `write()` if your UART does not.
+- **Give the driver a sleep for the 3.5-character gap.** A new request must start at least 3.5 characters
+  (1.75 ms above 19200 baud) after the previous frame ended ([Hardware](hardware.md#timing)). The driver waits
+  that long through `delay_ms()` before every request, so `delay_ms_impl()` must sleep *at least* `ms`: a
+  tick-based sleep that rounds 2 ms down to 0 ticks leaves no gap. Without `delay_ms_impl()`, wait in `write()`
+  or let the UART do it. Tell the driver the baud rate with `SetBusBaudRate()` when it is not 38400.
 - **Turn the bus around.** On RS-485, assert DE/RE for the request and release it right after the last stop bit,
   or the instrument's reply collides with your driver. Prefer the UART's hardware RS-485 mode (ESP-IDF
   `UART_MODE_RS485_HALF_DUPLEX`, STM32 `DEM`) over a GPIO toggled in software.

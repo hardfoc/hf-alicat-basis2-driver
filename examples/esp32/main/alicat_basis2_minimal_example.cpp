@@ -13,6 +13,7 @@
 
 #include "driver/uart.h"
 #include "esp_log.h"
+#include "esp_rom_sys.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -40,7 +41,16 @@ public:
         return (n < 0) ? 0 : static_cast<std::size_t>(n);
     }
     void flush_rx() noexcept       { uart_flush_input(kUartPort); }
-    void delay_ms_impl(std::uint32_t ms) noexcept { vTaskDelay(pdMS_TO_TICKS(ms)); }
+    // Sleep at least `ms` (the driver's Modbus inter-frame gap, 2 ms at 38400 baud). A tick-based
+    // vTaskDelay(pdMS_TO_TICKS(ms)) rounds 2 ms down to 0 ticks at 100 Hz, so busy-wait below two
+    // ticks and round up above.
+    void delay_ms_impl(std::uint32_t ms) noexcept {
+      if (ms < 2U * portTICK_PERIOD_MS) {
+        esp_rom_delay_us(ms * 1000U);
+      } else {
+        vTaskDelay((ms + portTICK_PERIOD_MS - 1U) / portTICK_PERIOD_MS + 1U);
+      }
+    }
 };
 
 }  // namespace
@@ -71,6 +81,7 @@ extern "C" void app_main(void) {
     // 2) Build the driver.
     EspUartAdapter adapter;
     al::Driver<EspUartAdapter> meter(adapter, kModbusAddr);
+    meter.SetBusBaudRate(kBaud); // for the inter-frame gap (38400 is also the default)
 
     // 3) Identity.
     auto id = meter.ReadIdentity();

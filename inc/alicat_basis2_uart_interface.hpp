@@ -17,8 +17,12 @@
  *            void log_impl(const char* tag, const char* fmt, ...); // printf-style
  *
  *          Without `delay_ms_impl`, `delay_ms()` does nothing: portable code
- *          has no time base to busy-wait on. Without `log_impl`, `log()`
- *          does nothing; the driver logs every failed transaction through it.
+ *          has no time base to busy-wait on. The driver calls `delay_ms()`
+ *          before every request to leave the Modbus-RTU 3.5-character idle
+ *          gap (Modbus over Serial Line V1.02, section 2.5.1.1), so a port
+ *          without the hook must leave the gap itself (in `write()` or in the
+ *          UART). Without `log_impl`, `log()` does nothing; the driver logs
+ *          every failed transaction through it.
  *
  *          Concrete adapters should map RS-485 DE/RE handling (when needed)
  *          onto the underlying UART driver's RS-485 mode before passing the

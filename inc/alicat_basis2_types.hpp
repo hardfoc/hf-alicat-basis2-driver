@@ -377,6 +377,12 @@ inline constexpr uint16_t kMagicTare            = 0xAA55;  // register 39 / 53.
 inline constexpr uint16_t kMagicFactoryRestore  = 0x5214;  // register 80.
 
 inline constexpr uint16_t kDefaultTimeoutMs     = 200;
+/// @deprecated Never used by the driver. The inter-frame gap is computed from
+///             the bus baud rate: `modbus::InterFrameGapUs()`,
+///             `Driver::SetBusBaudRate()`.
 inline constexpr uint16_t kInterFrameDelayMs    = 5;
+/// Baud rate the driver assumes for the inter-frame gap until told otherwise
+/// (the instrument's factory default, manual Rev 4 p. 18).
+inline constexpr uint32_t kDefaultBusBaudBps = 38400;
 
 }  // namespace alicat_basis2

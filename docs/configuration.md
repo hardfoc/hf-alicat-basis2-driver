@@ -65,6 +65,7 @@ These live in the `Driver` object, not in the instrument.
 | --- | --- | --- |
 | Target address | constructor, `SetAddress()` | As constructed |
 | Response timeout | constructor, `SetTimeoutMs()` | 200 ms (`kDefaultTimeoutMs`) |
+| Bus baud rate, for the inter-frame gap | `SetBusBaudRate()`; `SetBaudRate()` sets it too | 38400 (`kDefaultBusBaudBps`) |
 | Flow decimals | argument of `ReadInstantaneous()` | 3 |
 
 ## Back to factory settings

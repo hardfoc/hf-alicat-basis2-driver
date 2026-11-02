@@ -90,6 +90,28 @@ public:
     /// @return Current per-transaction timeout in milliseconds.
     uint16_t GetTimeoutMs() const noexcept  { return timeout_ms_; }
 
+    /**
+     * @brief Tell the driver the bus baud rate (default 38400, the factory rate).
+     *
+     * Only used for the Modbus-RTU inter-frame gap: before every request the
+     * driver waits `modbus::InterFrameGapMs(bps)` through the port's
+     * `delay_ms()` (3.5 characters, 1.75 ms above 19200 baud; Modbus over
+     * Serial Line V1.02 section 2.5.1.1), so the request cannot start inside
+     * the idle gap that ends the previous frame. `SetBaudRate()` updates it.
+     * Several drivers on one port: set it on each.
+     */
+    void SetBusBaudRate(uint32_t bps) noexcept {
+      bus_bps_ = bps;
+    }
+    /// @return Bus baud rate used for the inter-frame gap.
+    uint32_t GetBusBaudRate() const noexcept {
+      return bus_bps_;
+    }
+    /// @return The idle gap left before each request, in microseconds (before rounding to ms).
+    uint32_t GetInterFrameGapUs() const noexcept {
+      return modbus::InterFrameGapUs(bus_bps_);
+    }
+
     /// Switch the slave address this driver targets at runtime.
     void SetAddress(uint8_t addr) noexcept { address_ = addr; }
     /// @return Current Modbus slave address (1..247) this driver is talking to.
@@ -507,9 +529,15 @@ public:
      *            2. **Drain the response on the OLD baud**,
      *            3. Reconfigure its UART to the NEW baud,
      *            4. (Optional) Issue an identity read to confirm.
+     *
+     *          After the write the driver uses the new rate for its
+     *          inter-frame gap (`SetBusBaudRate()`), whatever the result:
+     *          the instrument switches as soon as it receives the request.
      */
     DriverResult<void> SetBaudRate(BaudRate br) noexcept {
-        return WriteSingleRegister(reg::BaudRate, static_cast<uint16_t>(br));
+      const auto rc = WriteSingleRegister(reg::BaudRate, static_cast<uint16_t>(br));
+      bus_bps_ = BaudRateToBps(br);
+      return rc;
     }
 
     /**
@@ -687,9 +715,18 @@ private:
     return rc;
   }
 
-  /// Start a transaction: drop stale RX bytes, then send the request.
+  /**
+   * @brief Start a transaction: leave the inter-frame gap, drop stale RX bytes, send.
+   *
+   * The previous transaction ended when its reply's last byte arrived (or its
+   * read timed out, or a broadcast was written), so waiting t3.5 here
+   * guarantees the idle time Modbus over Serial Line V1.02 section 2.5.1.1
+   * requires before a new frame. Rounded up to whole milliseconds; a no-op
+   * when the port has no `delay_ms_impl()`.
+   */
   void SendRequest(const uint8_t* tx, std::size_t tx_len) noexcept {
     last_exception_ = ModbusExceptionCode::None;
+    uart_.delay_ms(modbus::InterFrameGapMs(bus_bps_));
     uart_.flush_rx();
     uart_.write(tx, tx_len);
   }
@@ -746,6 +783,7 @@ private:
     uint16_t  timeout_ms_;
     ModbusExceptionCode last_exception_{ModbusExceptionCode::None};
     bool quiet_{false}; ///< No failure logs (the address sweep expects timeouts).
+    uint32_t bus_bps_{kDefaultBusBaudBps}; ///< Baud rate for the inter-frame gap.
 };
 
 }  // namespace alicat_basis2

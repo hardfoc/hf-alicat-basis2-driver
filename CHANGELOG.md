@@ -35,8 +35,18 @@ affected API.
   found now. The header said a port without `delay_ms_impl()` gets a busy-wait: that was wrong (portable code has
   no time base to busy-wait on) and the documentation now says it is a no-op, as the code does.
 
+- The Modbus-RTU 3.5-character inter-frame gap was not enforced: the driver wrote each request as soon as the
+  previous call returned. It now waits t3.5 through the port's `delay_ms()` before every request: 3.5 characters
+  of 11 bits up to 19200 baud, a fixed 1.75 ms above, rounded up to whole milliseconds (2 ms at the factory
+  38400 baud). New: `Driver::SetBusBaudRate()` / `GetBusBaudRate()` / `GetInterFrameGapUs()` (default 38400,
+  `kDefaultBusBaudBps`; `SetBaudRate()` updates it), `modbus::InterFrameGapUs()` / `InterFrameGapMs()`. Every
+  request now takes up to that long more; a port without `delay_ms_impl()` gets no wait, as before. The ESP32
+  examples' `delay_ms_impl()` rounded short sleeps down to zero ticks and now sleeps at least the time asked
+  for. (Modbus over Serial Line V1.02, sections 2.5.1 and 2.5.1.1; manual Rev 4, p. 18 for the baud rates.)
+
 ### Changed
 
+- `kInterFrameDelayMs` is deprecated: the driver never used it.
 - `reg::MeasurementPrevAvgFlowLow` is deprecated: 4214 is the high register. Use `reg::MeasurementPrevAvgFlow`.
 - Documentation moved to the HardFOC MkDocs platform: new page set (quickstart, hardware, architecture, API guide,
   configuration, porting, testing), code snippets compiled by the host build from `tests/docs/`, Doxygen under

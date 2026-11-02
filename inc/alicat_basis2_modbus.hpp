@@ -122,6 +122,41 @@ inline std::size_t BuildWriteMultiple(uint8_t  unit_addr,
     return AppendCrc(out, 7 + count * 2);
 }
 
+//==============================================================================
+// TIMING — Modbus over Serial Line V1.02, section 2.5.1.1
+//==============================================================================
+
+/// Bits per RTU character used for the timing: start + 8 data + parity/stop + stop (section 2.5.1).
+inline constexpr uint32_t kRtuBitsPerChar = 11;
+
+/// Above this baud rate the spec fixes t3.5 at 1750 us instead of 3.5 character times.
+inline constexpr uint32_t kFixedGapAboveBps = 19200;
+
+/// The fixed t3.5 used above 19200 baud, in microseconds.
+inline constexpr uint32_t kFixedGapUs = 1750;
+
+/**
+ * @brief Minimum idle time t3.5 between two Modbus-RTU frames, in microseconds.
+ *
+ * 3.5 character times of 11 bits at `bps`, rounded up; a fixed 1750 us above
+ * 19200 baud (Modbus over Serial Line V1.02, section 2.5.1.1). `bps == 0` is
+ * treated as "unknown" and gets the 4800-baud (longest) gap.
+ */
+constexpr uint32_t InterFrameGapUs(uint32_t bps) noexcept {
+  if (bps == 0)
+    bps = 4800;
+  if (bps > kFixedGapAboveBps)
+    return kFixedGapUs;
+  // 3.5 * 11 bits * 1e6 us / bps, rounded up.
+  constexpr uint32_t kNumerator = 7U * kRtuBitsPerChar * 1000000U / 2U; // 38'500'000
+  return (kNumerator + bps - 1U) / bps;
+}
+
+/// `InterFrameGapUs(bps)` rounded up to whole milliseconds (for `UartInterface::delay_ms()`).
+constexpr uint32_t InterFrameGapMs(uint32_t bps) noexcept {
+  return (InterFrameGapUs(bps) + 999U) / 1000U;
+}
+
 /// Length of a Modbus-RTU exception reply: address, function | 0x80, exception code, CRC-16.
 inline constexpr std::size_t kExceptionFrameLength = 5;
 
