@@ -43,3 +43,10 @@ configure_package_config_file(
   "${CMAKE_CURRENT_BINARY_DIR}/hf_alicat_basis2Config.cmake"
   INSTALL_DESTINATION lib/cmake/hf_alicat_basis2
 )
+
+# ── Host unit tests (mock UART; no hardware) ─────────────────────────────────
+option(HF_ALICAT_BASIS2_BUILD_TESTS "Build the host unit tests in tests/" OFF)
+if(HF_ALICAT_BASIS2_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
