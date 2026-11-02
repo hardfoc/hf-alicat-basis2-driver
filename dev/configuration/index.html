@@ -1311,7 +1311,7 @@
 <h1 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h1>
 <p>The settings a BASIS-2 takes over Modbus, their ranges and defaults, and the order to apply them in.</p>
 <p>Every setting here is a register write that the instrument keeps until you change it or restore the factory
-settings. Every snippet is compiled from <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/tests/docs/configuration.cpp"><code>tests/docs/configuration.cpp</code></a>.</p>
+settings. Every snippet is compiled from <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/tests/docs/configuration.cpp"><code>tests/docs/configuration.cpp</code></a>.</p>
 <h2 id="order">Order<a class="headerlink" href="#order" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1515,6 +1515,11 @@ leaves the gas unchanged (manual, register 2100).</p>
 <td>Response timeout</td>
 <td>constructor, <code>SetTimeoutMs()</code></td>
 <td>200 ms (<code>kDefaultTimeoutMs</code>)</td>
+</tr>
+<tr>
+<td>Bus baud rate, for the inter-frame gap</td>
+<td><code>SetBusBaudRate()</code>; <code>SetBaudRate()</code> sets it too</td>
+<td>38400 (<code>kDefaultBusBaudBps</code>)</td>
 </tr>
 <tr>
 <td>Flow decimals</td>

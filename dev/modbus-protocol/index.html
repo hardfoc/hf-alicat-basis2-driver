@@ -1410,9 +1410,43 @@ register tables.</p>
 </tbody>
 </table>
 <p>A rejected request gets an exception reply: the function code with bit 7 set (<code>0x83</code>, <code>0x86</code>, <code>0x90</code>), an
-exception code and the CRC. The write-single echo carries the value the host sent, not the value the instrument
-stored: an out-of-range setpoint is adjusted inside the instrument but echoed unchanged. Read the register back
-when you need the stored value. Reading an undefined register may return 0 or an exception.</p>
+exception code and the CRC, 5 bytes in all (Modbus Application Protocol V1.1b3, section 7). The driver reads the
+first 3 bytes of every reply; when bit 7 is set it reads the 2 CRC bytes, checks the CRC and returns
+<code>ModbusException</code> without waiting for the timeout. <code>GetLastException()</code> returns the exception code:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th><code>ModbusExceptionCode</code></th>
+<th>Typical cause on a BASIS-2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0x01</code></td>
+<td><code>IllegalFunction</code></td>
+<td>A function other than 03, 06, 16</td>
+</tr>
+<tr>
+<td><code>0x02</code></td>
+<td><code>IllegalDataAddress</code></td>
+<td>The manual's "Bad Address": a register this model or firmware does not have</td>
+</tr>
+<tr>
+<td><code>0x03</code></td>
+<td><code>IllegalDataValue</code></td>
+<td>A value or register count the instrument does not accept</td>
+</tr>
+<tr>
+<td><code>0x04</code></td>
+<td><code>ServerDeviceFailure</code></td>
+<td>An error inside the instrument</td>
+</tr>
+</tbody>
+</table>
+<p>The write-single echo carries the value the host sent, not the value the instrument stored: an out-of-range
+setpoint is adjusted inside the instrument but echoed unchanged. Read the register back when you need the stored
+value. Reading an undefined register may return 0 or an exception.</p>
 <h2 id="frame-format">Frame format<a class="headerlink" href="#frame-format" title="Permanent link">&para;</a></h2>
 <p><img alt="A Modbus-RTU read-holding request and reply, byte by byte: slave address, function code, register address and
 count, then the CRC-16 low byte first" class="hf-plate" src="../assets/basis2-modbus-frame.svg" /></p>
@@ -1531,7 +1565,7 @@ The setpoint write is always value / 1000, whatever the decimals.</p>
 <tbody>
 <tr>
 <td>4200 (R/W)</td>
-<td>Trigger (controllers): +1 on a digital setpoint change, +2 on a valve-hold change, +4 when 4214 is read</td>
+<td>Trigger (controllers): +1 on a digital setpoint change, +2 on a valve-hold change, +4 when the low register of the previous average flow (4215) is read</td>
 </tr>
 <tr>
 <td>4201 (R/W)</td>
@@ -1562,13 +1596,15 @@ The setpoint write is always value / 1000, whatever the decimals.</p>
 <td>Previous window: minimum and maximum flow, samples, average temperature</td>
 </tr>
 <tr>
-<td>4214 (R)</td>
-<td>Previous window's average flow, signed 32-bit</td>
+<td>4214-4215 (R)</td>
+<td>Previous window's average flow, signed 32-bit, high register first</td>
 </tr>
 </tbody>
 </table>
 <p><code>StartMeasurementSamples()</code> writes 4201, <code>ConfigureMeasurementTrigger()</code> writes 4200 and <code>ReadMeasurement()</code>
-reads 4201 to 4214.</p>
+reads 4201 to 4215 in one request. The manual gives the previous average flow as a 4-byte integer at 4214, so it
+fills 4214 and 4215 like every other 32-bit value; <code>prev_avg_flow_raw</code> is decoded from both.
+<code>num_samples_collected</code> is 4206 (samples averaged so far), <code>num_samples_requested</code> is 4201.</p>
 <h2 id="configuration-and-function-registers">Configuration and function registers<a class="headerlink" href="#configuration-and-function-registers" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1740,7 +1776,7 @@ exception.</p>
 </table>
 <h2 id="the-ascii-protocol">The ASCII protocol<a class="headerlink" href="#the-ascii-protocol" title="Permanent link">&para;</a></h2>
 <p>The instrument also accepts Alicat's ASCII commands (<code>A</code> for the data frame, <code>AS 15.44</code> for a setpoint), addressed
-by the unit ID. The driver does not implement them; the <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/docs/datasheet/DOC-MANUAL-BASIS2.pdf">manual</a> lists them.
+by the unit ID. The driver does not implement them; the <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/docs/datasheet/DOC-MANUAL-BASIS2.pdf">manual</a> lists them.
 Switching register 56 to BASIS 1 changes the command set and works only with SCCM, SLPM, NCCM and NLPM.</p>
 
 

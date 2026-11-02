@@ -1334,7 +1334,7 @@
 <p>Run the driver on a new MCU by writing one class: the serial interface.</p>
 <p>The driver never calls your SDK directly. It calls three methods on a class you derive from
 <code>alicat_basis2::UartInterface&lt;Self&gt;</code> (in
-<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/inc/alicat_basis2_uart_interface.hpp"><code>inc/alicat_basis2_uart_interface.hpp</code></a>). The base class uses CRTP: the
+<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/inc/alicat_basis2_uart_interface.hpp"><code>inc/alicat_basis2_uart_interface.hpp</code></a>). The base class uses CRTP: the
 calls are resolved at compile time, so there are no virtual functions, no vtable and nothing to allocate.</p>
 <figure class="hf-figure">
 <img src="../diagrams/driver-layers.svg#only-light" alt="Layer diagram: the application calls the hardware-agnostic BASIS-2 driver, which builds Modbus-RTU frames with a CRC-16, which go through the serial interface your platform port implements, which drives the UART, the RS-485 or RS-232 transceiver and the BASIS-2 instruments on the bus." width="1200" loading="lazy"><img src="../diagrams/driver-layers.dark.svg#only-dark" alt="Layer diagram: the application calls the hardware-agnostic BASIS-2 driver, which builds Modbus-RTU frames with a CRC-16, which go through the serial interface your platform port implements, which drives the UART, the RS-485 or RS-232 transceiver and the BASIS-2 instruments on the bus." width="1200" loading="lazy">
@@ -1344,7 +1344,7 @@ calls are resolved at compile time, so there are no virtual functions, no vtable
 <details class="hf-figure-desc">
 <summary>Figure description and sources</summary>
 <p>From top to bottom. Your application holds one Driver<Uart> object per instrument on the bus; its public calls (listed from inc/alicat_basis2.hpp) turn into holding-register reads and writes. The Modbus-RTU layer (inc/alicat_basis2_modbus.hpp) builds function 03, 06 and 16 frames and checks the CRC-16 of every reply. The platform port is the only code you write: a class derived from UartInterface (inc/alicat_basis2_uart_interface.hpp) that writes bytes, reads bytes with a timeout and flushes the receive buffer. Below it are the UART, the RS-485 or RS-232 transceiver and the instruments.</p>
-<p>Drawn from: <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/inc/alicat_basis2.hpp"><code>inc/alicat_basis2.hpp</code></a> <code>Driver members</code>; <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/inc/alicat_basis2_modbus.hpp"><code>inc/alicat_basis2_modbus.hpp</code></a> <code>frame builders</code>; <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/inc/alicat_basis2_uart_interface.hpp"><code>inc/alicat_basis2_uart_interface.hpp</code></a> <code>UartInterface</code>; figure module <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/docs/diagrams/figures/driver-layers.py"><code>docs/diagrams/figures/driver-layers.py</code></a>.</p>
+<p>Drawn from: <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/inc/alicat_basis2.hpp"><code>inc/alicat_basis2.hpp</code></a> <code>Driver members</code>; <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/inc/alicat_basis2_modbus.hpp"><code>inc/alicat_basis2_modbus.hpp</code></a> <code>frame builders</code>; <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/inc/alicat_basis2_uart_interface.hpp"><code>inc/alicat_basis2_uart_interface.hpp</code></a> <code>UartInterface</code>; figure module <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/docs/diagrams/figures/driver-layers.py"><code>docs/diagrams/figures/driver-layers.py</code></a>.</p>
 </details>
 <h2 id="what-you-implement">What you implement<a class="headerlink" href="#what-you-implement" title="Permanent link">&para;</a></h2>
 <table>
@@ -1374,12 +1374,22 @@ calls are resolved at compile time, so there are no virtual functions, no vtable
 <tr>
 <td><code>delay_ms_impl(uint32_t ms)</code></td>
 <td style="text-align: center;">optional</td>
-<td>Sleep; <code>UartInterface::delay_ms()</code> calls it when present and does nothing otherwise</td>
+<td>Sleep at least <code>ms</code>; <code>UartInterface::delay_ms()</code> calls it when present and does nothing otherwise (there is no portable time base for a busy-wait)</td>
+</tr>
+<tr>
+<td><code>log_impl(const char* tag, const char* fmt, ...)</code></td>
+<td style="text-align: center;">optional</td>
+<td>printf-style log line; <code>UartInterface::log()</code> forwards the tag, format and arguments to it when present and does nothing otherwise</td>
 </tr>
 </tbody>
 </table>
-<p>The driver calls <code>flush_rx()</code>, then <code>write()</code>, then one <code>read()</code> with the exact reply length it expects, for
-every request. It does not call <code>delay_ms()</code> today.</p>
+<p>The base class finds the optional hooks at compile time, public or private (with
+<code>friend class alicat_basis2::UartInterface&lt;Self&gt;;</code>). The driver logs every failed transaction through <code>log()</code>
+with the tag <code>alicat_basis2</code>, for example <code>addr 1 fn 0x06 reg 514: ModbusException IllegalDataAddress</code>; the
+address sweep stays quiet.</p>
+<p>The driver calls <code>flush_rx()</code>, then <code>write()</code>, then <code>read()</code> twice for every request: once for the first 3 bytes
+of the reply, then for the rest. The first 3 bytes tell a normal reply from a 5-byte exception reply (bit 7 of the
+function code), so the second <code>read()</code> asks for exactly the bytes still to come.</p>
 <h2 id="the-port">The port<a class="headerlink" href="#the-port" title="Permanent link">&para;</a></h2>
 <div class="language-cpp highlight"><span class="filename">my_uart.hpp</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyUart</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">alicat_basis2</span><span class="o">::</span><span class="n">UartInterface</span><span class="o">&lt;</span><span class="n">MyUart</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">public</span><span class="o">:</span>
@@ -1396,20 +1406,30 @@ every request. It does not call <code>delay_ms()</code> today.</p>
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">  </span><span class="c1">// Drop stale bytes (a late reply, line noise) before the next request.</span>
 </span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">flush_rx</span><span class="p">()</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">platform_uart_flush_rx</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">  </span><span class="c1">// Optional: a real sleep for UartInterface::delay_ms().</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">  </span><span class="c1">// Optional: a real sleep (at least `ms`) for UartInterface::delay_ms().</span>
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">delay_ms_impl</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ms</span><span class="p">)</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">platform_delay_ms</span><span class="p">(</span><span class="n">ms</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="p">};</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">  </span><span class="c1">// Optional: where the driver's failure logs go (printf-style).</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">log_impl</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">tag</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">fmt</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">    </span><span class="kt">va_list</span><span class="w"> </span><span class="n">ap</span><span class="p">;</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">    </span><span class="n">va_start</span><span class="p">(</span><span class="n">ap</span><span class="p">,</span><span class="w"> </span><span class="n">fmt</span><span class="p">);</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">    </span><span class="n">platform_log</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span><span class="w"> </span><span class="n">fmt</span><span class="p">,</span><span class="w"> </span><span class="n">ap</span><span class="p">);</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">    </span><span class="n">va_end</span><span class="p">(</span><span class="n">ap</span><span class="p">);</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="p">};</span>
 </span></code></pre></div>
 <h2 id="rules-for-the-transfer">Rules for the transfer<a class="headerlink" href="#rules-for-the-transfer" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Wait for the whole reply.</strong> The driver asks for the exact length of a good reply (8 bytes for a write,
-  5 + 2N for a read of N registers). A <code>read()</code> that returns after the first chunk gives the driver a partial
-  frame: <code>InvalidFrame</code> or <code>BadCrc</code> that come and go.</li>
-<li><strong>Return what you have at the timeout.</strong> A Modbus exception reply is 5 bytes, shorter than the driver asked
-  for; returning the partial bytes lets the driver decode the exception.</li>
-<li><strong>Leave the 3.5-character gap.</strong> A new request must start at least 3.5 characters (1.75 ms above 19200 baud)
-  after the previous reply ended (<a href="../hardware/#timing">Hardware</a>). A read that returns on the last byte followed at
-  once by the next call's <code>write()</code> can break it; wait in <code>write()</code> if your UART does not.</li>
+<li><strong>Wait for every byte asked for.</strong> The driver asks for exactly the bytes it needs (3, then 2 for an exception
+  reply, 5 for a write echo or 2 + 2N for a read of N registers). A <code>read()</code> that returns after the first chunk
+  gives the driver a partial frame: <code>InvalidFrame</code> or <code>BadCrc</code> that come and go.</li>
+<li><strong>Return what you have at the timeout.</strong> The return value must be the number of bytes that arrived; <code>0</code> is
+  reported as <code>Timeout</code>.</li>
+<li><strong>Give the driver a sleep for the 3.5-character gap.</strong> A new request must start at least 3.5 characters
+  (1.75 ms above 19200 baud) after the previous frame ended (<a href="../hardware/#timing">Hardware</a>). The driver waits
+  that long through <code>delay_ms()</code> before every request, so <code>delay_ms_impl()</code> must sleep <em>at least</em> <code>ms</code>: a
+  tick-based sleep that rounds 2 ms down to 0 ticks leaves no gap. Without <code>delay_ms_impl()</code>, wait in <code>write()</code>
+  or let the UART do it. Tell the driver the baud rate with <code>SetBusBaudRate()</code> when it is not 38400.</li>
 <li><strong>Turn the bus around.</strong> On RS-485, assert DE/RE for the request and release it right after the last stop bit,
   or the instrument's reply collides with your driver. Prefer the UART's hardware RS-485 mode (ESP-IDF
   <code>UART_MODE_RS485_HALF_DUPLEX</code>, STM32 <code>DEM</code>) over a GPIO toggled in software.</li>
@@ -1417,17 +1437,17 @@ every request. It does not call <code>delay_ms()</code> today.</p>
 </ul>
 <h2 id="reference-implementation">Reference implementation<a class="headerlink" href="#reference-implementation" title="Permanent link">&para;</a></h2>
 <p>The ESP32 examples define <code>EspUartAdapter</code> in
-<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/examples/esp32/main/alicat_basis2_minimal_example.cpp"><code>alicat_basis2_minimal_example.cpp</code></a>: ESP-IDF
+<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/examples/esp32/main/alicat_basis2_minimal_example.cpp"><code>alicat_basis2_minimal_example.cpp</code></a>: ESP-IDF
 <code>uart_write_bytes()</code>, <code>uart_read_bytes()</code> (which returns at <code>max</code> bytes or the timeout), <code>uart_flush_input()</code> and
 <code>vTaskDelay()</code>, with UART1 in RS-485 half-duplex mode. Start from it for any ESP-IDF target.</p>
 <h2 id="check-your-port">Check your port<a class="headerlink" href="#check-your-port" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Build it: the port on this page is compiled by the host CI from
-   <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/tests/docs/my_uart.hpp"><code>tests/docs/</code></a>, with the driver instantiated over it.</li>
+   <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/tests/docs/my_uart.hpp"><code>tests/docs/</code></a>, with the driver instantiated over it.</li>
 <li>Call <code>ReadIdentity()</code>: a serial number that matches the label proves the whole path.</li>
 <li>Call <code>ReadInstantaneous()</code> in a loop for a minute: no <code>BadCrc</code> or <code>InvalidFrame</code> on a healthy link.</li>
-<li>Call a write the instrument rejects (for example <code>SetCommWatchdogMs()</code> on a meter): it should fail after
-   about one timeout, not hang.</li>
+<li>Call a write the instrument rejects (for example <code>SetCommWatchdogMs()</code> on a meter): it should return
+   <code>ModbusException</code> at once, with <code>GetLastException()</code> = <code>IllegalDataAddress</code>, not after the timeout.</li>
 </ol>
 <h2 id="threads">Threads<a class="headerlink" href="#threads" title="Permanent link">&para;</a></h2>
 <p>The driver is not thread-safe. Give the bus one owner task, or guard every call on every driver that shares a

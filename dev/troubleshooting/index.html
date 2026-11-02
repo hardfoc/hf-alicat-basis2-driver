@@ -1392,12 +1392,12 @@ apart from instrument conditions (over range, valve hold).</p>
 </thead>
 <tbody>
 <tr>
-<td>A write returns <code>InvalidFrame</code> after a full timeout</td>
-<td>An exception reply to the write (a meter has no control registers)</td>
+<td><code>ModbusException</code> on a controller setting, <code>IllegalDataAddress</code></td>
+<td>A meter has no control registers</td>
 <td>Expected on meters; see <a href="../api-guide/#handle-errors">API guide</a></td>
 </tr>
 <tr>
-<td><code>ModbusException</code> on a read</td>
+<td><code>ModbusException</code> on a read, <code>IllegalDataAddress</code></td>
 <td>The register is not in this firmware (many were added in V3.0.0)</td>
 <td>Read the firmware version (register 25)</td>
 </tr>

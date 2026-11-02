@@ -1340,7 +1340,7 @@
 <details class="hf-figure-desc">
 <summary>Figure description and sources</summary>
 <p>From top to bottom. Your application holds one Driver<Uart> object per instrument on the bus; its public calls (listed from inc/alicat_basis2.hpp) turn into holding-register reads and writes. The Modbus-RTU layer (inc/alicat_basis2_modbus.hpp) builds function 03, 06 and 16 frames and checks the CRC-16 of every reply. The platform port is the only code you write: a class derived from UartInterface (inc/alicat_basis2_uart_interface.hpp) that writes bytes, reads bytes with a timeout and flushes the receive buffer. Below it are the UART, the RS-485 or RS-232 transceiver and the instruments.</p>
-<p>Drawn from: <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/inc/alicat_basis2.hpp"><code>inc/alicat_basis2.hpp</code></a> <code>Driver members</code>; <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/inc/alicat_basis2_modbus.hpp"><code>inc/alicat_basis2_modbus.hpp</code></a> <code>frame builders</code>; <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/inc/alicat_basis2_uart_interface.hpp"><code>inc/alicat_basis2_uart_interface.hpp</code></a> <code>UartInterface</code>; figure module <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/docs/diagrams/figures/driver-layers.py"><code>docs/diagrams/figures/driver-layers.py</code></a>.</p>
+<p>Drawn from: <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/inc/alicat_basis2.hpp"><code>inc/alicat_basis2.hpp</code></a> <code>Driver members</code>; <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/inc/alicat_basis2_modbus.hpp"><code>inc/alicat_basis2_modbus.hpp</code></a> <code>frame builders</code>; <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/inc/alicat_basis2_uart_interface.hpp"><code>inc/alicat_basis2_uart_interface.hpp</code></a> <code>UartInterface</code>; figure module <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/docs/diagrams/figures/driver-layers.py"><code>docs/diagrams/figures/driver-layers.py</code></a>.</p>
 </details>
 <h2 id="the-three-layers">The three layers<a class="headerlink" href="#the-three-layers" title="Permanent link">&para;</a></h2>
 <table>
@@ -1354,12 +1354,12 @@
 <tbody>
 <tr>
 <td><strong>Hardware-agnostic core</strong>: <code>Driver&lt;UartT&gt;</code></td>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/inc/alicat_basis2.hpp"><code>inc/alicat_basis2.hpp</code></a></td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/inc/alicat_basis2.hpp"><code>inc/alicat_basis2.hpp</code></a></td>
 <td>Never, for a new board</td>
 </tr>
 <tr>
 <td><strong>Modbus-RTU framing</strong>: <code>alicat_basis2::modbus</code></td>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/inc/alicat_basis2_modbus.hpp"><code>inc/alicat_basis2_modbus.hpp</code></a></td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/inc/alicat_basis2_modbus.hpp"><code>inc/alicat_basis2_modbus.hpp</code></a></td>
 <td>Never</td>
 </tr>
 <tr>
@@ -1370,7 +1370,7 @@
 </tbody>
 </table>
 <p>The core depends only on the port's methods; the framing depends on nothing. The port derives from
-<code>UartInterface</code> in <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/inc/alicat_basis2_uart_interface.hpp"><code>inc/alicat_basis2_uart_interface.hpp</code></a> and calls
+<code>UartInterface</code> in <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/inc/alicat_basis2_uart_interface.hpp"><code>inc/alicat_basis2_uart_interface.hpp</code></a> and calls
 your SDK.</p>
 <p>Everything above the port is the same on ESP32, STM32, a Linux host or the unit-test mock. That is how the
 <a href="../testing/">host tests</a> run the real driver code without hardware.</p>
@@ -1386,13 +1386,16 @@ your SDK.</p>
     M--&gt;&gt;D: 13-byte frame with CRC-16
     D-&gt;&gt;P: flush_rx()
     D-&gt;&gt;P: write(frame)
-    D-&gt;&gt;P: read(rx, 8, timeout)
-    P--&gt;&gt;D: 8 reply bytes (or fewer on timeout)
+    D-&gt;&gt;P: read(rx, 3, timeout)
+    P--&gt;&gt;D: address, 0x10, register high byte
+    Note over D: bit 7 of 0x10 clear: a normal reply (an exception reply would end 2 bytes later)
+    D-&gt;&gt;P: read(rx + 3, 5, timeout)
+    P--&gt;&gt;D: the other 5 reply bytes (or fewer on timeout)
     D-&gt;&gt;M: ParseWriteMultipleEcho(rx, addr, 2053, 2)
     M--&gt;&gt;D: DriverError::None
     D--&gt;&gt;A: DriverResult&lt;void&gt; ok</code></pre>
-<p>Every public call is one or more of these exchanges: flush, write the request, read the expected reply length
-with the timeout, check it. A broadcast (address 0) write returns as soon as the request is written; no
+<p>Every public call is one or more of these exchanges: flush, write the request, read the reply header and then the
+rest of the reply with the timeout, check it. A broadcast (address 0) write returns as soon as the request is written; no
 instrument replies to it.</p>
 <h2 id="why-crtp">Why CRTP<a class="headerlink" href="#why-crtp" title="Permanent link">&para;</a></h2>
 <p>The port is a class template parameter, not a virtual base class. The compiler sees your port's methods

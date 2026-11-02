@@ -641,6 +641,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#install-and-find_package" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install and find_package
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#esp-idf" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1284,6 +1295,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#install-and-find_package" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install and find_package
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#esp-idf" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1394,11 +1416,29 @@ either.</p>
 <td><code>OFF</code></td>
 <td>Builds the host unit tests in <code>tests/</code> (<a href="../testing/">Testing and CI</a>)</td>
 </tr>
+<tr>
+<td><code>HF_ALICAT_BASIS2_INSTALL</code></td>
+<td><code>ON</code> when top-level</td>
+<td>Generates the install rules (below); off under <code>add_subdirectory()</code></td>
+</tr>
 </tbody>
 </table>
+<h2 id="install-and-find_package">Install and find_package<a class="headerlink" href="#install-and-find_package" title="Permanent link">&para;</a></h2>
+<p>Install the headers and the CMake package once, then use it from any project:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cmake<span class="w"> </span>-S<span class="w"> </span>external/hf-alicat-basis2-driver<span class="w"> </span>-B<span class="w"> </span>build-alicat
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>cmake<span class="w"> </span>--install<span class="w"> </span>build-alicat<span class="w"> </span>--prefix<span class="w"> </span>/opt/hardfoc
+</span></code></pre></div>
+<div class="language-cmake highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">find_package</span><span class="p">(</span><span class="s">hf_alicat_basis2</span><span class="w"> </span><span class="s">1.0</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span><span class="w">   </span><span class="c"># CMAKE_PREFIX_PATH=/opt/hardfoc</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">my_app</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">hf::alicat_basis2</span><span class="p">)</span>
+</span></code></pre></div>
+<p>The install puts every header of <code>inc/</code> and the generated <code>alicat_basis2_version.h</code> in
+<code>include/hf_alicat_basis2/</code>, and the package files in <code>lib/cmake/hf_alicat_basis2/</code>. The imported target is
+<code>hf::alicat_basis2</code>, the same name as with <code>add_subdirectory()</code>, with the include directory and <code>cxx_std_17</code>; you
+still write <code>#include "alicat_basis2.hpp"</code>. The version check accepts the same major version. A host test installs
+to a temporary prefix and builds a <code>find_package()</code> consumer on every pull request.</p>
 <h2 id="esp-idf">ESP-IDF<a class="headerlink" href="#esp-idf" title="Permanent link">&para;</a></h2>
 <p>The ESP-IDF component wrapper is
-<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/examples/esp32/components/hf_alicat_basis2/CMakeLists.txt"><code>examples/esp32/components/hf_alicat_basis2/</code></a>.
+<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/examples/esp32/components/hf_alicat_basis2/CMakeLists.txt"><code>examples/esp32/components/hf_alicat_basis2/</code></a>.
 Copy that folder into your project's <code>components/</code> (or point <code>EXTRA_COMPONENT_DIRS</code> at it) and set the
 <code>HF_ALICAT_BASIS2_ROOT</code> cache variable to the driver checkout; the wrapper stops with a clear message when the
 path is wrong. Your component then declares <code>REQUIRES hf_alicat_basis2</code>.</p>
@@ -1414,24 +1454,24 @@ path is wrong. Your component then declares <code>REQUIRES hf_alicat_basis2</cod
 <tbody>
 <tr>
 <td>Settings</td>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/cmake/hf_alicat_basis2_build_settings.cmake"><code>cmake/hf_alicat_basis2_build_settings.cmake</code></a></td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/cmake/hf_alicat_basis2_build_settings.cmake"><code>cmake/hf_alicat_basis2_build_settings.cmake</code></a></td>
 <td>Target name, include directories, version: the single source of truth</td>
 </tr>
 <tr>
 <td>Library</td>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/CMakeLists.txt"><code>CMakeLists.txt</code></a></td>
-<td><code>INTERFACE</code> target, package config, host tests</td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/CMakeLists.txt"><code>CMakeLists.txt</code></a></td>
+<td><code>INTERFACE</code> target, install rules, package config, host tests</td>
 </tr>
 <tr>
 <td>ESP-IDF</td>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/examples/esp32/components/hf_alicat_basis2/CMakeLists.txt"><code>examples/esp32/components/hf_alicat_basis2/CMakeLists.txt</code></a></td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/examples/esp32/components/hf_alicat_basis2/CMakeLists.txt"><code>examples/esp32/components/hf_alicat_basis2/CMakeLists.txt</code></a></td>
 <td>IDF component wrapper over the same settings</td>
 </tr>
 </tbody>
 </table>
 <p>The version is set once in the settings file and written into <code>alicat_basis2_version.h</code> (in the build tree, under
 <code>hf_alicat_basis2_generated/</code>) at configure time. Read it at run time:</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">alicat_basis2</span><span class="o">::</span><span class="n">GetDriverVersion</span><span class="p">();</span><span class="w">   </span><span class="c1">// "1.0.0"</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">alicat_basis2</span><span class="o">::</span><span class="n">GetDriverVersion</span><span class="p">();</span><span class="w">   </span><span class="c1">// "1.0.0"</span>
 </span></code></pre></div>
 <p>The same string is the macro <code>HF_ALICAT_BASIS2_VERSION_STRING</code>.</p>
 <h2 id="headers">Headers<a class="headerlink" href="#headers" title="Permanent link">&para;</a></h2>

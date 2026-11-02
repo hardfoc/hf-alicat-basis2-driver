@@ -1306,21 +1306,33 @@ not have, silence for another address, and a switch to corrupt the CRC.</p>
 </thead>
 <tbody>
 <tr>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/tests/test_modbus.cpp"><code>tests/test_modbus.cpp</code></a></td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/tests/test_modbus.cpp"><code>tests/test_modbus.cpp</code></a></td>
 <td>CRC-16 against the Modbus specification example, request builders, reply parsing</td>
 </tr>
 <tr>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/tests/test_driver.cpp"><code>tests/test_driver.cpp</code></a></td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/tests/test_driver.cpp"><code>tests/test_driver.cpp</code></a></td>
 <td>Identity, live data scaling, setpoint encoding, magic values, range checks, address change, errors, discovery</td>
 </tr>
 <tr>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/tests/mock_basis2.hpp"><code>tests/mock_basis2.hpp</code></a></td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/tests/test_hooks.cpp"><code>tests/test_hooks.cpp</code></a></td>
+<td>The optional port hooks <code>delay_ms_impl()</code> and <code>log_impl()</code>, the driver's failure logs</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/tests/test_timing.cpp"><code>tests/test_timing.cpp</code></a></td>
+<td>The 3.5-character inter-frame gap before every request</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/tests/mock_basis2.hpp"><code>tests/mock_basis2.hpp</code></a></td>
 <td>The instrument model</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/tests/install/run_install_test.cmake"><code>tests/install/</code></a></td>
+<td>CTest <code>hf_alicat_basis2_install_consumer</code>: <code>cmake --install</code> to a temporary prefix, every header present, a <code>find_package()</code> consumer builds</td>
 </tr>
 </tbody>
 </table>
 <h2 id="documentation-snippets">Documentation snippets<a class="headerlink" href="#documentation-snippets" title="Permanent link">&para;</a></h2>
-<p>Every C++ block on this site is included from <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/tests/docs/my_uart.hpp"><code>tests/docs/</code></a>, which the host build
+<p>Every C++ block on this site is included from <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/tests/docs/my_uart.hpp"><code>tests/docs/</code></a>, which the host build
 compiles (target <code>hf_alicat_basis2_doc_snippets</code>) with the driver instantiated over the documented port. A change
 to the API that breaks a page breaks the build first.</p>
 <h2 id="ci-workflows">CI workflows<a class="headerlink" href="#ci-workflows" title="Permanent link">&para;</a></h2>

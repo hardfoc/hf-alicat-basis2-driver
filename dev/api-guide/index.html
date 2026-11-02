@@ -1443,7 +1443,7 @@
 <h1 id="api-guide">API guide<a class="headerlink" href="#api-guide" title="Permanent link">&para;</a></h1>
 <p>How to do the common jobs with the driver: identify, read, command, tare, set up a bus and handle errors.</p>
 <p>Every snippet on this page is compiled by the host CI from
-<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/tests/docs/api_tasks.cpp"><code>tests/docs/api_tasks.cpp</code></a>, with <code>Driver</code> standing for
+<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/tests/docs/api_tasks.cpp"><code>tests/docs/api_tasks.cpp</code></a>, with <code>Driver</code> standing for
 <code>alicat_basis2::Driver&lt;MyUart&gt;</code> and <code>al</code> for <code>alicat_basis2</code>. The <a href="../api-reference/">API reference</a> lists every
 member.</p>
 <h2 id="the-shape-of-the-api">The shape of the API<a class="headerlink" href="#the-shape-of-the-api" title="Permanent link">&para;</a></h2>
@@ -1504,7 +1504,7 @@ member.</p>
 </tr>
 <tr>
 <td>Driver settings</td>
-<td><code>SetAddress()</code>, <code>GetAddress()</code>, <code>SetTimeoutMs()</code>, <code>GetTimeoutMs()</code></td>
+<td><code>SetAddress()</code>, <code>GetAddress()</code>, <code>SetTimeoutMs()</code>, <code>GetTimeoutMs()</code>, <code>SetBusBaudRate()</code>, <code>GetBusBaudRate()</code></td>
 <td></td>
 </tr>
 </tbody>
@@ -1598,14 +1598,20 @@ is lost. <code>SetTotalizerBatch()</code> takes the volume already scaled to the
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">controller</span><span class="p">.</span><span class="n">ConfigureMeasurementTrigger</span><span class="p">(</span><span class="n">al</span><span class="o">::</span><span class="n">MeasurementTrigger</span><span class="o">::</span><span class="n">OnDigitalSetpointChange</span><span class="p">);</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">controller</span><span class="p">.</span><span class="n">StartMeasurementSamples</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span><span class="w">   </span><span class="c1">// 400 samples at about 2.5 ms: about 1 s</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1">// ... wait at least as long as the window ...</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">controller</span><span class="p">.</span><span class="n">ReadMeasurement</span><span class="p">();</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">controller</span><span class="p">.</span><span class="n">ReadMeasurement</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="c1">// 3: the same flow decimals as live data</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">ok</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"min %d max %d avg %d (raw flow), avg %.2f C</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">min_flow_raw</span><span class="p">,</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">              </span><span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">max_flow_raw</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">avg_flow_raw</span><span class="p">,</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">avg_temperature_c</span><span class="p">));</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">}</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%u samples: min %d max %d (raw flow), avg flow %.3f, avg %.2f C</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">              </span><span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">num_samples_collected</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">min_flow_raw</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">max_flow_raw</span><span class="p">,</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">              </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">avg_flow</span><span class="p">),</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">              </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">avg_temperature_c</span><span class="p">));</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"previous window: avg flow %ld (raw)</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">              </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">prev_avg_flow_raw</span><span class="p">));</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>The instrument samples about every 2.5 ms. Writing the sample count starts a new window and moves the running one
-into the "previous" registers. Use the raw minimum, maximum and average flow with the same decimals as live flow.</p>
+into the "previous" registers. <code>ReadMeasurement(decimals)</code> reads registers 4201 to 4215 in one request and scales
+<code>avg_flow</code> by the same decimals as live flow; scale the raw minimum, maximum and previous average flow
+(<code>prev_avg_flow_raw</code>, 32-bit at 4214-4215) the same way.</p>
 <h2 id="find-and-readdress-instruments">Find and readdress instruments<a class="headerlink" href="#find-and-readdress-instruments" title="Permanent link">&para;</a></h2>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">uint8_t</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="o">&gt;</span><span class="w"> </span><span class="n">present</span><span class="p">{};</span><span class="w">   </span><span class="c1">// bit N set: an instrument answered at address N</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">probe</span><span class="p">.</span><span class="n">DiscoverPresentAddresses</span><span class="p">(</span><span class="n">present</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span><span class="w"> </span><span class="n">present</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
@@ -1638,7 +1644,8 @@ top of each other.</p>
 <p class="admonition-title">The instrument switches before it answers</p>
 <p>The manual warns that the host must change its own rate in time to receive the confirmation, and may not.
 Treat the result of <code>SetBaudRate()</code> as unreliable, switch the host UART, then confirm with a read at the new
-rate. If that fails, sweep the six rates to find the instrument again.</p>
+rate. If that fails, sweep the six rates to find the instrument again. <code>SetBaudRate()</code> also switches the
+driver's inter-frame gap to the new rate; call <code>SetBusBaudRate()</code> on the other drivers that share the port.</p>
 </div>
 <h2 id="use-any-register-directly">Use any register directly<a class="headerlink" href="#use-any-register-directly" title="Permanent link">&para;</a></h2>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kt">uint16_t</span><span class="w"> </span><span class="n">full_scale_sccm</span><span class="p">[</span><span class="mi">2</span><span class="p">]{};</span><span class="w">       </span><span class="c1">// registers 35-36: full scale in SCCM, unsigned 32-bit</span>
@@ -1658,12 +1665,13 @@ with their scaling. <code>ReadHoldingRegisters()</code> reads up to 32 registers
 </span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="no">al</span><span class="o">::</span><span class="no">DriverError</span><span class="o">::</span><span class="no">BadCrc</span><span class="p">:</span><span class="w">          </span><span class="c1">// noise, termination, a second slave answering</span>
 </span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="k">break</span><span class="p">;</span>
 </span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="no">al</span><span class="o">::</span><span class="no">DriverError</span><span class="o">::</span><span class="no">ModbusException</span><span class="p">:</span><span class="w"> </span><span class="c1">// the instrument refused: register, value, meter vs controller</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">    </span><span class="k">break</span><span class="p">;</span>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">  </span><span class="k">default</span><span class="o">:</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">al</span><span class="o">::</span><span class="n">ToString</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">error</span><span class="p">).</span><span class="n">data</span><span class="p">());</span>
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">    </span><span class="k">break</span><span class="p">;</span>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="p">}</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"exception %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">al</span><span class="o">::</span><span class="n">ToString</span><span class="p">(</span><span class="n">meter</span><span class="p">.</span><span class="n">GetLastException</span><span class="p">()).</span><span class="n">data</span><span class="p">());</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">    </span><span class="k">break</span><span class="p">;</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">  </span><span class="k">default</span><span class="o">:</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">al</span><span class="o">::</span><span class="n">ToString</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">error</span><span class="p">).</span><span class="n">data</span><span class="p">());</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">    </span><span class="k">break</span><span class="p">;</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="p">}</span>
 </span></code></pre></div>
 <table>
 <thead>
@@ -1681,8 +1689,8 @@ with their scaling. <code>ReadHoldingRegisters()</code> reads up to 32 registers
 </tr>
 <tr>
 <td><code>InvalidFrame</code></td>
-<td>Too short, wrong byte count; also an exception reply to a write (see below)</td>
-<td>Line noise, a register a meter does not have</td>
+<td>Too short, wrong byte count</td>
+<td>Line noise, a <code>read()</code> that returns early</td>
 </tr>
 <tr>
 <td><code>BadCrc</code></td>
@@ -1691,8 +1699,8 @@ with their scaling. <code>ReadHoldingRegisters()</code> reads up to 32 registers
 </tr>
 <tr>
 <td><code>ModbusException</code></td>
-<td>The instrument returned an exception to a read</td>
-<td>Register not implemented by this model or firmware</td>
+<td>The instrument returned an exception reply; <code>GetLastException()</code> has the code</td>
+<td>Register not in this model or firmware (<code>IllegalDataAddress</code>), a meter asked for a controller setting</td>
 </tr>
 <tr>
 <td><code>ResponseMismatch</code></td>
@@ -1712,9 +1720,12 @@ with their scaling. <code>ReadHoldingRegisters()</code> reads up to 32 registers
 </tbody>
 </table>
 <div class="admonition note">
-<p class="admonition-title">Exceptions to writes</p>
-<p>An exception reply is 5 bytes; the write calls expect an 8-byte reply, so today a rejected write (for example
-<code>SetSetpointSource()</code> on a meter) returns <code>InvalidFrame</code> after the full timeout, not <code>ModbusException</code>.</p>
+<p class="admonition-title">Exception replies come back at once</p>
+<p>An exception reply is 5 bytes: the function code with bit 7 set, the exception code and the CRC. The driver
+reads the first 3 bytes of every reply, sees bit 7 and reads only the CRC, so a rejected read or write (for
+example <code>SetSetpointSource()</code> on a meter) returns <code>ModbusException</code> as soon as the reply has arrived, not after
+the timeout. <code>GetLastException()</code> returns the code (<code>ModbusExceptionCode</code>, <code>ToString()</code> names it) until the
+next request.</p>
 </div>
 <p>The status bits in <code>InstantaneousData</code> (<code>mass_flow_overrange</code>, <code>temperature_overrange</code>, <code>totalizer_overrange</code>,
 <code>valve_held</code>, <code>valve_thermal_management</code>) report instrument conditions, not transport errors.

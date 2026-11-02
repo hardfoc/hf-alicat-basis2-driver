@@ -1398,7 +1398,7 @@
 
 <h1 id="hardware">Hardware<a class="headerlink" href="#hardware" title="Permanent link">&para;</a></h1>
 <p>What to connect between your MCU and a BASIS-2, with which bus settings, and the wiring traps to avoid.</p>
-<p>All values here come from the <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/docs/datasheet/DOC-MANUAL-BASIS2.pdf">BASIS-2 operation manual</a> (Rev 4, May 2025) unless a
+<p>All values here come from the <a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/docs/datasheet/DOC-MANUAL-BASIS2.pdf">BASIS-2 operation manual</a> (Rev 4, May 2025) unless a
 row says it is derived. The manual covers both B-Series meters and BC-Series controllers; rows marked
 "controllers" do not apply to meters.</p>
 <h2 id="connector">Connector<a class="headerlink" href="#connector" title="Permanent link">&para;</a></h2>
@@ -1560,49 +1560,63 @@ pins 5 and 6 to 3.3 V logic directly.</p>
 <p>The manual does not state a factory Modbus address. Find it with <code>DiscoverPresentAddresses()</code> on a bus with one
 instrument (<a href="../api-guide/#find-and-readdress-instruments">API guide</a>).</p>
 <h2 id="timing">Timing<a class="headerlink" href="#timing" title="Permanent link">&para;</a></h2>
-<p>Modbus-RTU ends a frame with an idle gap of 3.5 characters, and a new frame must not start sooner. The driver
-writes a request, then reads the reply; it does not insert a gap itself, so the port or the UART must leave it
-(<a href="../porting/#rules-for-the-transfer">Porting</a>).</p>
+<p>Modbus-RTU ends a frame with an idle gap of 3.5 characters (t3.5), and a new frame must not start sooner (Modbus
+over Serial Line V1.02, section 2.5.1.1). The driver leaves it: before every request it waits t3.5 through the
+port's <code>delay_ms()</code>, computed from the bus baud rate it was given with <code>SetBusBaudRate()</code> (default 38400, the
+factory rate; <code>SetBaudRate()</code> updates it). The wait is rounded up to whole milliseconds. A port without
+<code>delay_ms_impl()</code> gets no wait and must leave the gap itself (<a href="../porting/#rules-for-the-transfer">Porting</a>).</p>
 <table>
 <thead>
 <tr>
 <th>Baud</th>
 <th>Byte (8N1)</th>
-<th>3.5-char gap</th>
+<th>t3.5</th>
+<th>Driver waits</th>
 <th>Live-data exchange</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td>4800</td>
+<td>2.08 ms</td>
+<td>8.02 ms</td>
+<td>9 ms</td>
+<td>68.8 ms</td>
+</tr>
+<tr>
 <td>9600</td>
 <td>1.04 ms</td>
-<td>3.65 ms</td>
+<td>4.01 ms</td>
+<td>5 ms</td>
 <td>34.4 ms</td>
 </tr>
 <tr>
 <td>19200</td>
 <td>0.52 ms</td>
-<td>1.82 ms</td>
+<td>2.01 ms</td>
+<td>3 ms</td>
 <td>17.2 ms</td>
 </tr>
 <tr>
 <td>38400</td>
 <td>0.26 ms</td>
 <td>1.75 ms</td>
+<td>2 ms</td>
 <td>8.6 ms</td>
 </tr>
 <tr>
 <td>115200</td>
 <td>0.087 ms</td>
 <td>1.75 ms</td>
+<td>2 ms</td>
 <td>2.9 ms</td>
 </tr>
 </tbody>
 </table>
-<p>The live-data exchange is <code>ReadInstantaneous()</code>: an 8-byte request and a 25-byte reply. These figures are derived
-from the baud rate and the Modbus over Serial Line specification (10 bits per byte at 8N1; a fixed 1.75 ms gap
-above 19200 baud), not measured. The instrument's own turnaround comes on top; the manual does
-not specify it.</p>
+<p>t3.5 is 3.5 characters of 11 bits, the RTU character of the specification (section 2.5.1), up to 19200 baud, and
+a fixed 1.75 ms above (section 2.5.1.1); <code>modbus::InterFrameGapUs()</code> computes it. The live-data exchange is
+<code>ReadInstantaneous()</code>: an 8-byte request and a 25-byte reply at 10 bits per byte (8N1), without the gap. These
+figures are derived, not measured. The instrument's own turnaround comes on top; the manual does not specify it.</p>
 <pre class="mermaid"><code>sequenceDiagram
     participant H as Host (driver)
     participant B as BASIS-2 at address 1
@@ -1704,7 +1718,7 @@ voltage on it, so use a heavy ground wire when you also read the analog output.<
 </thead>
 <tbody>
 <tr>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/5811fcb0243f2cd3c8adba28eaa91e214d069973/docs/datasheet/DOC-MANUAL-BASIS2.pdf">BASIS-2 operation manual</a></td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/ad27b0037c8f0ba43c52a6fa98f3f67a04f30366/docs/datasheet/DOC-MANUAL-BASIS2.pdf">BASIS-2 operation manual</a></td>
 <td>Pinout, power, ASCII commands, Modbus register map</td>
 </tr>
 <tr>
