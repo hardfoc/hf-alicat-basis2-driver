@@ -1,70 +1,109 @@
 ---
-layout: default
-title: "📚 Documentation"
-description: "Complete documentation for the HardFOC Alicat BASIS-2 driver"
-nav_order: 2
-parent: "HardFOC Alicat BASIS-2 Driver"
-permalink: /docs/
-has_children: true
+hide:
+  - navigation
+  - toc
 ---
 
-# HF-Alicat-BASIS2 documentation
+<div class="hf-hero" markdown>
+<span class="hf-kicker">HardFOC driver</span>
 
-Welcome. This site mirrors the [`docs/`](https://github.com/hardfoc/hf-alicat-basis2-driver/tree/main/docs) folder in the repository and adds navigation, search, and diagrams for the **Alicat BASIS-2** mass-flow meter / controller (B-Series and BC-Series) driver.
+# Alicat BASIS-2 Driver
 
-> **Browse on GitHub:** [repository home](https://github.com/hardfoc/hf-alicat-basis2-driver) · [Issues](https://github.com/hardfoc/hf-alicat-basis2-driver/issues)
+<p>A C++17 driver for Alicat BASIS-2 mass flow meters and controllers. It reads flow, temperature and the totalizer,
+commands setpoints, tares and reconfigures the instruments over Modbus-RTU, on any MCU with a UART and an RS-485 or
+RS-232 transceiver.</p>
 
-## Documentation structure
+[Quickstart](quickstart.md){ .md-button .md-button--primary }
+[API guide](api-guide.md){ .md-button }
+[Source on GitHub](https://github.com/hardfoc/hf-alicat-basis2-driver){ .md-button }
+</div>
 
-### Getting started
+The driver has no platform code. You give it a small class that writes bytes, reads bytes with a timeout and
+flushes the receive buffer; it does the rest: Modbus-RTU framing, the CRC-16, reply checks, register scaling and
+error reporting. It is header-only and allocates nothing.
 
-1. **[Installation](installation.md)** — Compiler / CMake requirements and include layout
-2. **[Quick start](quickstart.md)** — Smallest CRTP serial adapter you need to read live data
-3. **[Modbus protocol](modbus_protocol.md)** — Frame format, register map highlights, CRC
+<div class="hf-chip" markdown>
+<div class="hf-chip__head">
+<span class="hf-chip__kicker">Thermal mass flow meter and controller</span>
+<span class="hf-chip__name">BASIS-2</span>
+<span class="hf-chip__vendor">Alicat Scientific</span>
+</div>
 
-### Hardware & integration
+Instruments
+:   B-Series meters and BC-Series controllers, 100 SCCM to 20 SLPM full scale, 9 calibrated gases
 
-4. **[Hardware setup — RS-485 bus](hardware_setup.md)** — Pinout, transceiver, multidrop wiring
-5. **[CMake integration](cmake_integration.md)** — `hf_alicat_basis2_build_settings.cmake`, `hf::alicat_basis2` target
+Interface
+:   RS-485 or RS-232 (by model), 8 data bits, no parity, 1 stop bit; 38400 baud default, 4800 to 115200
 
-### Reference & examples
+Protocols
+:   Modbus-RTU (functions 03, 06, 16), which this driver uses; Alicat ASCII commands
 
-6. **[API reference](api_reference.md)** — `Driver<UartT>`, `UartInterface<>`, types, results
-7. **[Examples](examples.md)** — ESP-IDF examples (minimal + comprehensive) and build/flash flow
-8. **[Troubleshooting](troubleshooting.md)** — Bus discovery, baud changes, exception codes
+Addressing
+:   Modbus address 1 to 247; ASCII unit ID `A` to `Z`
 
-### Manufacturer
+Supply
+:   12 V to 24 V DC; 210 mA (controller), 12 mA (meter)
 
-9. **[Datasheet & links](datasheet/README.md)** — Bundled
-   [`DOC-MANUAL-BASIS2.pdf`](datasheet/DOC-MANUAL-BASIS2.pdf) (Rev 4,
-   May 2025) plus links to Alicat product pages, FlowVision software
-   and the Modbus FAQ.
+Connector and limits
+:   6-pin JST-GH; 145 PSIG maximum common-mode pressure
 
----
+[Operation manual (Rev 4, May 2025)](datasheet/DOC-MANUAL-BASIS2.pdf) ·
+[Alicat manuals](https://www.alicat.com/manuals/)
+</div>
 
-## Recommended reading order
+## What you get
 
-1. [Installation](installation.md) — ensure the version header generation is wired
-2. [Hardware setup](hardware_setup.md) — wire the RS-485 transceiver and chain instruments
-3. [Quick start](quickstart.md) — implement `write` / `read` / `flush_rx` for your platform
-4. [Modbus protocol](modbus_protocol.md) — understand the framing the driver speaks
-5. [Examples](examples.md) — run the ESP32-S3 minimal or comprehensive project
+- **One object per instrument.** `Driver<YourUart>` targets one Modbus address; several drivers share one port
+  for a multidrop RS-485 bus. See [API guide](api-guide.md#talk-to-several-instruments).
+- **Live data in one request.** `ReadInstantaneous()` reads registers 2100 to 2109 (gas, status, temperature,
+  flow, total, setpoint, valve drive, batch) and decodes them. See [API guide](api-guide.md#read-live-data).
+- **Control and configuration.** Setpoint, setpoint source, watchdog, ramp, tare, totalizer, gas, averaging,
+  reference temperature. See [Configuration](configuration.md).
+- **Bus bring-up.** An address sweep, address and baud-rate changes, factory restore. See
+  [Modbus-RTU protocol](modbus-protocol.md).
+- **Zero-overhead portability.** The port is a CRTP class: no virtual calls, no heap, no exceptions, no RTOS
+  dependency. See [Porting](porting.md).
+- **Tested without hardware.** Host unit tests run the driver against a model of a BASIS-2 Modbus slave. See
+  [Testing and CI](testing.md).
 
----
+## Where to go next
 
-## Visual overview
+<div class="grid cards" markdown>
 
-| Diagram | File |
-| --- | --- |
-| RS-485 multidrop topology (default example) | [`assets/basis2-rs485-topology.svg`](assets/basis2-rs485-topology.svg) |
-| Modbus-RTU read-holding round-trip | [`assets/basis2-modbus-frame.svg`](assets/basis2-modbus-frame.svg) |
+-   :material-rocket-launch-outline: **[Quickstart](quickstart.md)**
 
----
+    ---
 
-## Need help?
+    Wire the bus, write the port, read flow in about 15 lines.
 
-- **Build or flash issues:** [Troubleshooting](troubleshooting.md) and [Examples](examples.md)
-- **Bus / wiring:** [Hardware setup](hardware_setup.md)
-- **API details:** [API reference](api_reference.md) and the headers in [`inc/`](https://github.com/hardfoc/hf-alicat-basis2-driver/tree/main/inc) on GitHub
+-   :material-chip: **[Hardware](hardware.md)**
 
-**Next:** [Installation →](installation.md)
+    ---
+
+    Connector pinout, bus settings, timing and power.
+
+-   :material-layers-outline: **[Architecture](architecture.md)**
+
+    ---
+
+    The three layers and what each one owns.
+
+-   :material-code-braces: **[API guide](api-guide.md)**
+
+    ---
+
+    Read, command, configure and handle errors, task by task.
+
+-   :material-swap-horizontal: **[Porting](porting.md)**
+
+    ---
+
+    Implement the serial interface for your MCU.
+
+-   :material-book-open-variant: **[API reference](api-reference.md)**
+
+    ---
+
+    Every class and member, generated from the headers.
+
+</div>

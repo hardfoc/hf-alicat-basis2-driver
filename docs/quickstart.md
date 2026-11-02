@@ -1,110 +1,77 @@
----
-layout: default
-title: "🚀 Quick start"
-nav_order: 2
-parent: "📚 Documentation"
-permalink: /docs/quickstart/
----
+# Quickstart
 
-# Quick start
+Read flow from a BASIS-2 on your MCU: wire the bus and power, write a small port class, call two driver functions.
 
-The whole driver is parameterised on a CRTP adapter that owns the UART
-transport. Implementing the adapter takes ~20 lines on any platform.
+!!! warning "Power goes to pin 4 only"
+    The manual warns that power on any pin other than pin 4 can permanently damage the instrument. Wire every
+    signal before you switch on the 12 V to 24 V supply.
 
-## 1. Implement the CRTP adapter
+## 1. Wire it
 
-```cpp
-#include "alicat_basis2_uart_interface.hpp"
+The usual setup is RS-485 through a half-duplex transceiver; the instrument's model decides whether pins 5 and 6
+are RS-485 or RS-232.
 
-class MyUart : public alicat_basis2::UartInterface<MyUart> {
-public:
-    void write(const std::uint8_t* data, std::size_t len) noexcept;
-    std::size_t read(std::uint8_t* out, std::size_t max,
-                     std::uint32_t timeout_ms) noexcept;
-    void flush_rx() noexcept;
+| From | To | Notes |
+| --- | --- | --- |
+| MCU UART TX | Transceiver DI | 8N1, 38400 baud out of the factory |
+| MCU UART RX | Transceiver RO | |
+| MCU GPIO or RTS | Transceiver DE and RE, tied | High while the MCU transmits |
+| Transceiver A | BASIS-2 pin 6, A (−) | 6-pin JST-GH on top |
+| Transceiver B | BASIS-2 pin 5, B (+) | |
+| MCU GND | Transceiver GND, BASIS-2 pin 3 | One common ground |
+| 12 V to 24 V DC | BASIS-2 pin 4 | Last, after everything else |
 
-    // Optional. The driver calls delay_ms() internally when it needs
-    // the Modbus-RTU 3.5-character idle gap. If your platform has a
-    // sleep primitive, expose it via delay_ms_impl(); otherwise skip it
-    // and the call becomes a no-op.
-    void delay_ms_impl(std::uint32_t ms) noexcept;
-};
+The [Hardware](hardware.md) page has the RS-232 wiring, the bus settings and the power figures.
+
+## 2. Add the driver
+
+Add the repository as a submodule and link the `hf::alicat_basis2` CMake target (or put `inc/` on the include
+path and build with C++17). [Installation](installation.md) covers CMake and ESP-IDF.
+
+```bash
+git submodule add https://github.com/hardfoc/hf-alicat-basis2-driver.git external/hf-alicat-basis2-driver
 ```
 
-`write` must block until every byte is accepted by the underlying serial
-driver. `read` should pull up to `max` bytes within the timeout and return
-the number actually written into `out` (returning 0 on timeout is
-expected and not an error condition).
+## 3. Write the port
 
-## 2. Construct the driver
+The port is the only platform code. It writes bytes, reads bytes with a timeout and flushes the receive buffer.
+Replace the `platform_*` calls with your SDK's.
 
-```cpp
-#include "alicat_basis2.hpp"
-
-MyUart uart;
-alicat_basis2::Driver<MyUart> meter(uart, /*modbus_address=*/1);
+```cpp title="my_uart.hpp"
+--8<-- "tests/docs/my_uart.hpp:port"
 ```
 
-## 3. Read the identity once at boot
+`read()` must wait until `max` bytes have arrived or the timeout has passed, then return what it has.
+[Porting](porting.md) explains each method and the RS-485 direction pin.
 
-```cpp
-auto id = meter.ReadIdentity();
-if (id.ok()) {
-    printf("FW %u.%u.%u  serial=%s  units=%s  full-scale=%lu\n",
-           id.value.fw_major, id.value.fw_minor, id.value.fw_patch,
-           id.value.serial_number,
-           alicat_basis2::ToString(id.value.flow_units).data(),
-           static_cast<unsigned long>(id.value.full_scale_flow_raw));
-}
+## 4. Read flow
+
+```cpp title="main.cpp"
+--8<-- "tests/docs/quickstart.cpp:quickstart"
 ```
 
-## 4. Periodically pull live data
+What each step does:
 
-```cpp
-auto live = meter.ReadInstantaneous();
-if (live.ok()) {
-    printf("%s  T=%.2f C  flow=%.4f  total=%.4f  drive=%.1f%%\n",
-           alicat_basis2::GasShortName(live.value.gas).data(),
-           static_cast<double>(live.value.temperature_c),
-           static_cast<double>(live.value.flow),
-           static_cast<double>(live.value.total_volume),
-           static_cast<double>(live.value.valve_drive_pct));
-}
-```
+1. `Driver<MyUart>(uart, 1)` targets Modbus address 1 with the default 200 ms response timeout. Nothing is sent
+   yet.
+2. `ReadIdentity()` reads the firmware version, serial number, address, unit ID, full scale and flow units. A
+   reply proves the wiring, the baud rate and the address.
+3. `ReadInstantaneous(3)` reads registers 2100 to 2109 in one request. The `3` is the number of decimals the
+   instrument's flow registers carry; see [API guide](api-guide.md#read-live-data).
 
-`ReadInstantaneous()` issues a single Modbus burst over registers
-**2100..2109**, decoding gas, status bits, temperature, flow,
-totalizer, setpoint, valve drive and batch remaining in one round-trip.
+This example is built by the host CI, so it compiles against the current headers.
 
-## 5. Common control operations
+## If it does not work
 
-```cpp
-meter.Tare();
-meter.SetGas(alicat_basis2::Gas::Nitrogen);
-meter.SetReferenceTemperatureC(25.0f);
-meter.SetCommWatchdogMs(2000);
-meter.SetSetpointSource(alicat_basis2::SetpointSource::DigitalUnsaved);
-meter.SetSetpoint(2.5f);   // controllers only
-```
+| Symptom | First thing to check |
+| --- | --- |
+| `Timeout` on every call | Baud rate (38400 default), A and B swapped, DE/RE not driven, wrong address |
+| `BadCrc` | A missing common ground, termination on a long bus, two instruments at one address |
+| `flow` is 10 or 100 times off | The decimals passed to `ReadInstantaneous()` ([API guide](api-guide.md#read-live-data)) |
+| The LED blinks red fast | Mass flow, temperature or totalizer over range ([Troubleshooting](troubleshooting.md)) |
 
-## 6. Bus discovery (first power-up)
+## Next
 
-When you don't know which addresses are programmed on the bus, use
-`DiscoverPresentAddresses()`:
-
-```cpp
-std::array<std::uint8_t, 32> bitmap{};
-auto rc = meter.DiscoverPresentAddresses(bitmap.data(), bitmap.size());
-if (rc.ok()) {
-    for (uint16_t a = 1; a <= 247; ++a) {
-        if (bitmap[a / 8] & (1u << (a % 8))) {
-            printf("addr=%u present\n", a);
-        }
-    }
-}
-```
-
-This sweeps the bus reading register 25 (firmware version) at every
-address and records who replies.
-
-**Next:** [Modbus protocol →](modbus_protocol.md)
+- [API guide](api-guide.md): setpoints, taring, the totalizer, errors.
+- [Examples](examples.md): complete ESP32-S3 applications.
+- [Modbus-RTU protocol](modbus-protocol.md): frames, registers and what each call sends.
