@@ -3,7 +3,10 @@
 ESP-IDF examples for the **Alicat BASIS-2** mass-flow meter / controller
 talking Modbus-RTU over RS-485 to an ESP32-S3 UART.
 
-**Documentation:** [Docs home](../../docs/index.md) · [Hardware setup](../../docs/hardware_setup.md) · [Examples guide](../../docs/examples.md) · [ESP-IDF UART (ESP32-S3)](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/peripherals/uart.html)
+**Documentation:** [Docs home](https://hardfoc.github.io/hf-alicat-basis2-driver/latest/) ·
+[Hardware](https://hardfoc.github.io/hf-alicat-basis2-driver/latest/hardware/) ·
+[Examples](https://hardfoc.github.io/hf-alicat-basis2-driver/latest/examples/) ·
+[ESP-IDF UART (ESP32-S3)](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/peripherals/uart.html)
 
 ## Submodule (required for `./scripts/build_app.sh`)
 
@@ -20,13 +23,13 @@ from any consuming repository that vendors the same layout.
 
 ## Wiring (default configuration)
 
-| Signal              | ESP32-S3 (default) |
-| ------------------- | ------------------ |
-| RS-485 TX (DI)      | **GPIO17**         |
-| RS-485 RX (RO)      | **GPIO18**         |
-| RS-485 DE / RE      | **GPIO8**          |
-| Logic supply (3V3)  | 3.3 V to transceiver |
-| Common GND          | shared with bus    |
+| Signal | ESP32-S3 (default) |
+| --- | --- |
+| RS-485 TX (DI) | GPIO17 |
+| RS-485 RX (RO) | GPIO18 |
+| RS-485 DE / RE | GPIO8 |
+| Logic supply (3V3) | 3.3 V to transceiver |
+| Common GND | shared with bus |
 
 Edit the `kTxGpio` / `kRxGpio` / `kRtsDeRe` constants in the example
 source file if you use different pins. Set `kRtsDeRe = -1` if your
