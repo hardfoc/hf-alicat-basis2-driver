@@ -26,8 +26,9 @@ calls are resolved at compile time, so there are no virtual functions, no vtable
 | `flush_rx()` | yes | Discard every byte already received |
 | `delay_ms_impl(uint32_t ms)` | optional | Sleep; `UartInterface::delay_ms()` calls it when present and does nothing otherwise |
 
-The driver calls `flush_rx()`, then `write()`, then one `read()` with the exact reply length it expects, for
-every request. It does not call `delay_ms()` today.
+The driver calls `flush_rx()`, then `write()`, then `read()` twice for every request: once for the first 3 bytes
+of the reply, then for the rest. The first 3 bytes tell a normal reply from a 5-byte exception reply (bit 7 of the
+function code), so the second `read()` asks for exactly the bytes still to come.
 
 ## The port
 
@@ -37,11 +38,11 @@ every request. It does not call `delay_ms()` today.
 
 ## Rules for the transfer
 
-- **Wait for the whole reply.** The driver asks for the exact length of a good reply (8 bytes for a write,
-  5 + 2N for a read of N registers). A `read()` that returns after the first chunk gives the driver a partial
-  frame: `InvalidFrame` or `BadCrc` that come and go.
-- **Return what you have at the timeout.** A Modbus exception reply is 5 bytes, shorter than the driver asked
-  for; returning the partial bytes lets the driver decode the exception.
+- **Wait for every byte asked for.** The driver asks for exactly the bytes it needs (3, then 2 for an exception
+  reply, 5 for a write echo or 2 + 2N for a read of N registers). A `read()` that returns after the first chunk
+  gives the driver a partial frame: `InvalidFrame` or `BadCrc` that come and go.
+- **Return what you have at the timeout.** The return value must be the number of bytes that arrived; `0` is
+  reported as `Timeout`.
 - **Leave the 3.5-character gap.** A new request must start at least 3.5 characters (1.75 ms above 19200 baud)
   after the previous reply ended ([Hardware](hardware.md#timing)). A read that returns on the last byte followed at
   once by the next call's `write()` can break it; wait in `write()` if your UART does not.
@@ -63,8 +64,8 @@ The ESP32 examples define `EspUartAdapter` in
    [`tests/docs/`](../tests/docs/my_uart.hpp), with the driver instantiated over it.
 2. Call `ReadIdentity()`: a serial number that matches the label proves the whole path.
 3. Call `ReadInstantaneous()` in a loop for a minute: no `BadCrc` or `InvalidFrame` on a healthy link.
-4. Call a write the instrument rejects (for example `SetCommWatchdogMs()` on a meter): it should fail after
-   about one timeout, not hang.
+4. Call a write the instrument rejects (for example `SetCommWatchdogMs()` on a meter): it should return
+   `ModbusException` at once, with `GetLastException()` = `IllegalDataAddress`, not after the timeout.
 
 ## Threads
 

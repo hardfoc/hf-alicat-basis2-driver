@@ -124,9 +124,8 @@ TEST_CASE("errors: exception for a missing register, timeout for a silent addres
   m.regs.erase(4210);
   al::Driver<MockBasis2> d(m, 1);
   CHECK(d.ReadMeasurement().error == al::DriverError::ModbusException);
-  // A write's exception reply (5 bytes) is shorter than the 8-byte echo the parser expects, so it is
-  // reported as InvalidFrame today.
-  CHECK(d.SetCommWatchdogMs(100).error == al::DriverError::InvalidFrame);
+  CHECK(d.GetLastException() == al::ModbusExceptionCode::IllegalDataAddress);
+  CHECK(d.SetCommWatchdogMs(100).error == al::DriverError::ModbusException);
 
   al::Driver<MockBasis2> nobody(m, 9);
   CHECK(nobody.ReadInstantaneous().error == al::DriverError::Timeout);
@@ -147,4 +146,30 @@ TEST_CASE("DiscoverPresentAddresses finds the responding address and restores th
   CHECK_EQ(d.GetAddress(), 1);
   CHECK_EQ(d.GetTimeoutMs(), 150);
   CHECK_EQ(m.requests.size(), 6U);
+}
+
+TEST_CASE("exception replies to writes are recognised by length and returned without a timeout") {
+  // Modbus Application Protocol V1.1b3 section 7: function | 0x80, exception code, CRC (5 bytes).
+  MockBasis2 m = makeController();
+  m.regs.erase(514); // a meter: no control registers
+  m.regs.erase(2053);
+  al::Driver<MockBasis2> d(m, 1);
+
+  CHECK(d.SetCommWatchdogMs(100).error == al::DriverError::ModbusException); // function 06
+  CHECK(d.GetLastException() == al::ModbusExceptionCode::IllegalDataAddress);
+  CHECK(d.SetSetpoint(1.0f).error == al::DriverError::ModbusException); // function 16
+  CHECK(d.GetLastException() == al::ModbusExceptionCode::IllegalDataAddress);
+  m.regs.erase(25);
+  uint16_t fw = 0;
+  CHECK(d.ReadHoldingRegisters(al::reg::FirmwareVersion, &fw, 1) ==
+        al::DriverError::ModbusException); // function 03
+  CHECK_EQ(m.timeouts, 0U);                // every exception came back without waiting
+
+  CHECK(d.Tare().ok()); // a good request clears the last exception
+  CHECK(d.GetLastException() == al::ModbusExceptionCode::None);
+
+  m.corrupt_crc = true; // a damaged exception reply is a CRC error, still without a timeout
+  CHECK(d.SetCommWatchdogMs(100).error == al::DriverError::BadCrc);
+  CHECK(d.GetLastException() == al::ModbusExceptionCode::None);
+  CHECK_EQ(m.timeouts, 0U);
 }

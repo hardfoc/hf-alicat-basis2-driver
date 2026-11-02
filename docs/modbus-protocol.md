@@ -14,7 +14,17 @@ The BASIS-2 implements three Modbus functions, and the driver uses all three.
 | `0x10` | Write multiple registers | `WriteMultipleRegisters()`, the 32-bit writes | Address, `0x10`, start register, count, CRC |
 
 A rejected request gets an exception reply: the function code with bit 7 set (`0x83`, `0x86`, `0x90`), an
-exception code and the CRC. The write-single echo carries the value the host sent, not the value the instrument
+exception code and the CRC, 5 bytes in all (Modbus Application Protocol V1.1b3, section 7). The driver reads the
+first 3 bytes of every reply; when bit 7 is set it reads the 2 CRC bytes, checks the CRC and returns
+`ModbusException` without waiting for the timeout. `GetLastException()` returns the exception code:
+
+| Code | `ModbusExceptionCode` | Typical cause on a BASIS-2 |
+| --- | --- | --- |
+| `0x01` | `IllegalFunction` | A function other than 03, 06, 16 |
+| `0x02` | `IllegalDataAddress` | The manual's "Bad Address": a register this model or firmware does not have |
+| `0x03` | `IllegalDataValue` | A value or register count the instrument does not accept |
+| `0x04` | `ServerDeviceFailure` | An error inside the instrument |
+ The write-single echo carries the value the host sent, not the value the instrument
 stored: an out-of-range setpoint is adjusted inside the instrument but echoed unchanged. Read the register back
 when you need the stored value. Reading an undefined register may return 0 or an exception.
 

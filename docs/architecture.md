@@ -41,15 +41,18 @@ sequenceDiagram
     M-->>D: 13-byte frame with CRC-16
     D->>P: flush_rx()
     D->>P: write(frame)
-    D->>P: read(rx, 8, timeout)
-    P-->>D: 8 reply bytes (or fewer on timeout)
+    D->>P: read(rx, 3, timeout)
+    P-->>D: address, 0x10, register high byte
+    Note over D: bit 7 of 0x10 clear: a normal reply (an exception reply would end 2 bytes later)
+    D->>P: read(rx + 3, 5, timeout)
+    P-->>D: the other 5 reply bytes (or fewer on timeout)
     D->>M: ParseWriteMultipleEcho(rx, addr, 2053, 2)
     M-->>D: DriverError::None
     D-->>A: DriverResult<void> ok
 ```
 
-Every public call is one or more of these exchanges: flush, write the request, read the expected reply length
-with the timeout, check it. A broadcast (address 0) write returns as soon as the request is written; no
+Every public call is one or more of these exchanges: flush, write the request, read the reply header and then the
+rest of the reply with the timeout, check it. A broadcast (address 0) write returns as soon as the request is written; no
 instrument replies to it.
 
 ## Why CRTP

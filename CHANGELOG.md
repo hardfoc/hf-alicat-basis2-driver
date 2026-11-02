@@ -8,6 +8,17 @@ affected API.
 ### Added
 
 - Host unit tests (`-DHF_ALICAT_BASIS2_BUILD_TESTS=ON`) against a mock BASIS-2 Modbus slave, and a CI workflow.
+- `ModbusExceptionCode`, `ToString(ModbusExceptionCode)` and `Driver::GetLastException()`: the code of the last
+  exception reply. `modbus::ParseException()` and `modbus::IsExceptionReply()`.
+
+### Fixed
+
+- **BREAKING (behaviour):** an exception reply to a write (functions 06 and 16) returned `InvalidFrame` after the
+  full response timeout. The driver now reads the 3-byte reply header first, recognises an exception reply by bit 7
+  of the function code, reads its CRC and returns `ModbusException` at once; reads (function 03) also no longer
+  wait for the timeout on an exception. Code that matched `InvalidFrame` for a rejected write must match
+  `ModbusException`. (Modbus Application Protocol V1.1b3, section 7; manual Rev 4, "Communicating Via
+  Modbus-RTU", p. 18.)
 
 ### Changed
 

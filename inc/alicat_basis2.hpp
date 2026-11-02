@@ -558,6 +558,12 @@ public:
     // RAW MODBUS PRIMITIVES
     //==========================================================================
 
+    /**
+     * @brief Function 03: read `count` holding registers starting at `reg_addr`.
+     * @return `None`, or the transaction's error. An exception reply returns
+     *         `ModbusException` as soon as its 5 bytes arrived; its code is in
+     *         `GetLastException()`.
+     */
     DriverError ReadHoldingRegisters(uint16_t reg_addr, uint16_t* out, uint8_t count) noexcept {
         if (!out || count == 0 || count > 125) return DriverError::InvalidParameter;
         std::array<uint8_t, 8> tx{};
@@ -565,38 +571,51 @@ public:
                                                             tx.data(), tx.size());
         if (tx_len == 0) return DriverError::BufferTooSmall;
 
-        uart_.flush_rx();
-        uart_.write(tx.data(), tx_len);
-
         // Expected response: addr(1) + fn(1) + bytecount(1) + payload(2*count) + crc(2)
         const std::size_t need = 5 + 2U * count;
         std::array<uint8_t, 5 + 2 * 32> rx{};  // up to 32 regs per call
         if (need > rx.size()) return DriverError::BufferTooSmall;
-        const std::size_t got = uart_.read(rx.data(), need, timeout_ms_);
-        if (got == 0) return DriverError::Timeout;
-        if (got < 5)  return DriverError::InvalidFrame;
+
+        SendRequest(tx.data(), tx_len);
+        std::size_t got = 0;
+        const DriverError rc = ReceiveReply(reg::fn::ReadHolding, rx.data(), need, got);
+        if (rc != DriverError::None)
+          return rc;
         return modbus::ParseReadHolding(rx.data(), got, address_, count, out);
     }
 
+    /**
+     * @brief Function 06: write one holding register.
+     * @return Success, or the transaction's error. An exception reply returns
+     *         `ModbusException` as soon as its 5 bytes arrived; its code is in
+     *         `GetLastException()`.
+     */
     DriverResult<void> WriteSingleRegister(uint16_t reg_addr, uint16_t value) noexcept {
         std::array<uint8_t, 8> tx{};
         const std::size_t tx_len = modbus::BuildWriteSingle(address_, reg_addr, value,
                                                             tx.data(), tx.size());
         if (tx_len == 0) return DriverResult<void>::failure(DriverError::BufferTooSmall);
 
-        uart_.flush_rx();
-        uart_.write(tx.data(), tx_len);
+        SendRequest(tx.data(), tx_len);
 
         // Broadcast → no response.
         if (address_ == kBroadcastAddress) return DriverResult<void>::success();
 
         std::array<uint8_t, 8> rx{};
-        const std::size_t got = uart_.read(rx.data(), 8, timeout_ms_);
-        if (got == 0) return DriverResult<void>::failure(DriverError::Timeout);
+        std::size_t got = 0;
+        const DriverError rc = ReceiveReply(reg::fn::WriteSingle, rx.data(), rx.size(), got);
+        if (rc != DriverError::None)
+          return DriverResult<void>::failure(rc);
         return DriverResult<void>{ modbus::ParseWriteSingleEcho(rx.data(), got,
                                                                 tx.data(), tx_len) };
     }
 
+    /**
+     * @brief Function 16: write `count` (1..32) consecutive holding registers.
+     * @return Success, or the transaction's error. An exception reply returns
+     *         `ModbusException` as soon as its 5 bytes arrived; its code is in
+     *         `GetLastException()`.
+     */
     DriverResult<void> WriteMultipleRegisters(uint16_t reg_addr,
                                               const uint16_t* regs, uint8_t count) noexcept {
         if (!regs || count == 0 || count > 32) {
@@ -607,19 +626,72 @@ public:
                                                               tx.data(), tx.size());
         if (tx_len == 0) return DriverResult<void>::failure(DriverError::BufferTooSmall);
 
-        uart_.flush_rx();
-        uart_.write(tx.data(), tx_len);
+        SendRequest(tx.data(), tx_len);
 
         if (address_ == kBroadcastAddress) return DriverResult<void>::success();
 
         std::array<uint8_t, 8> rx{};
-        const std::size_t got = uart_.read(rx.data(), 8, timeout_ms_);
-        if (got == 0) return DriverResult<void>::failure(DriverError::Timeout);
+        std::size_t got = 0;
+        const DriverError rc = ReceiveReply(reg::fn::WriteMultiple, rx.data(), rx.size(), got);
+        if (rc != DriverError::None)
+          return DriverResult<void>::failure(rc);
         return DriverResult<void>{ modbus::ParseWriteMultipleEcho(rx.data(), got,
                                                                   address_, reg_addr, count) };
     }
 
+    /**
+     * @brief Exception code of the last transaction's exception reply.
+     * @return The code when the last request got an exception reply (the call
+     *         returned `DriverError::ModbusException`), `ModbusExceptionCode::None`
+     *         otherwise. Reset at the start of every request.
+     */
+    ModbusExceptionCode GetLastException() const noexcept {
+      return last_exception_;
+    }
+
 private:
+  /// Start a transaction: drop stale RX bytes, then send the request.
+  void SendRequest(const uint8_t* tx, std::size_t tx_len) noexcept {
+    last_exception_ = ModbusExceptionCode::None;
+    uart_.flush_rx();
+    uart_.write(tx, tx_len);
+  }
+
+  /**
+   * @brief Receive the reply to a request with function code `fn`.
+   *
+   * Reads the first `modbus::kReplyHeaderLength` bytes, then decides on the
+   * frame length: with bit 7 of the function code set the reply is an
+   * exception reply (5 bytes, Modbus Application Protocol V1.1b3 section 7)
+   * and only its CRC is still to come; otherwise the rest of the
+   * `expected_len`-byte reply is read. A rejected request therefore returns at
+   * once instead of waiting the full timeout for bytes that never come.
+   *
+   * @param[out] got Bytes in `rx` when the return value is `None`.
+   * @return `None` when a normal reply was read (the caller parses it);
+   *         `Timeout`, `InvalidFrame`, `BadCrc`, `ResponseMismatch` or
+   *         `ModbusException` (code in `last_exception_`) otherwise.
+   */
+  DriverError ReceiveReply(uint8_t fn, uint8_t* rx, std::size_t expected_len,
+                           std::size_t& got) noexcept {
+    got = uart_.read(rx, modbus::kReplyHeaderLength, timeout_ms_);
+    if (got == 0)
+      return DriverError::Timeout;
+    if (got < modbus::kReplyHeaderLength)
+      return DriverError::InvalidFrame;
+    if (modbus::IsExceptionReply(rx, got)) {
+      got += uart_.read(rx + got, modbus::kExceptionFrameLength - got, timeout_ms_);
+      uint8_t code = 0;
+      const DriverError rc = modbus::ParseException(rx, got, address_, fn, &code);
+      if (rc == DriverError::ModbusException) {
+        last_exception_ = static_cast<ModbusExceptionCode>(code);
+      }
+      return rc;
+    }
+    got += uart_.read(rx + got, expected_len - got, timeout_ms_);
+    return DriverError::None;
+  }
+
     static float Pow10(int n) noexcept {
         float v = 1.0f;
         for (int i = 0; i < n; ++i) v *= 10.0f;
@@ -635,6 +707,7 @@ private:
     UartT&    uart_;
     uint8_t   address_;
     uint16_t  timeout_ms_;
+    ModbusExceptionCode last_exception_{ModbusExceptionCode::None};
 };
 
 }  // namespace alicat_basis2

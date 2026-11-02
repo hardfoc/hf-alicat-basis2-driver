@@ -72,6 +72,44 @@ constexpr std::string_view ToString(DriverError e) noexcept {
     return "?";
 }
 
+/**
+ * @brief Exception code of a Modbus exception reply (function code | 0x80, one code byte).
+ *
+ * Modbus Application Protocol V1.1b3, section 7. The BASIS-2 manual (Rev 4, "Communicating Via
+ * Modbus-RTU", p. 18) names the illegal data address ("Bad Address") reply for undefined registers.
+ * `Driver::GetLastException()` returns the code of the last exception reply.
+ */
+enum class ModbusExceptionCode : uint8_t {
+  None = 0x00,                ///< The last transaction got no exception reply.
+  IllegalFunction = 0x01,     ///< Function code not supported.
+  IllegalDataAddress = 0x02,  ///< Register not implemented ("Bad Address").
+  IllegalDataValue = 0x03,    ///< Value not accepted.
+  ServerDeviceFailure = 0x04, ///< Unrecoverable error in the instrument.
+  Acknowledge = 0x05,         ///< Accepted, long-running.
+  ServerDeviceBusy = 0x06,    ///< Busy; retry later.
+};
+
+/// Convert a ModbusExceptionCode to a stable human-readable string (no allocation).
+constexpr std::string_view ToString(ModbusExceptionCode c) noexcept {
+  switch (c) {
+  case ModbusExceptionCode::None:
+    return "None";
+  case ModbusExceptionCode::IllegalFunction:
+    return "IllegalFunction";
+  case ModbusExceptionCode::IllegalDataAddress:
+    return "IllegalDataAddress";
+  case ModbusExceptionCode::IllegalDataValue:
+    return "IllegalDataValue";
+  case ModbusExceptionCode::ServerDeviceFailure:
+    return "ServerDeviceFailure";
+  case ModbusExceptionCode::Acknowledge:
+    return "Acknowledge";
+  case ModbusExceptionCode::ServerDeviceBusy:
+    return "ServerDeviceBusy";
+  }
+  return "?";
+}
+
 /// Lightweight result wrapper. Aborts on `value()` if `!ok()`.
 template <typename T>
 struct DriverResult {

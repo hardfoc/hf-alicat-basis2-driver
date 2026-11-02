@@ -28,8 +28,8 @@ apart from instrument conditions (over range, valve hold).
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| A write returns `InvalidFrame` after a full timeout | An exception reply to the write (a meter has no control registers) | Expected on meters; see [API guide](api-guide.md#handle-errors) |
-| `ModbusException` on a read | The register is not in this firmware (many were added in V3.0.0) | Read the firmware version (register 25) |
+| `ModbusException` on a controller setting, `IllegalDataAddress` | A meter has no control registers | Expected on meters; see [API guide](api-guide.md#handle-errors) |
+| `ModbusException` on a read, `IllegalDataAddress` | The register is not in this firmware (many were added in V3.0.0) | Read the firmware version (register 25) |
 | Setpoint writes have no effect | Setpoint source is `Analog` | `SetSetpointSource(SetpointSource::DigitalUnsaved)` |
 | Setpoint jumps to 0, valve closes | Communication watchdog expired | Poll faster than the watchdog, or `SetCommWatchdogMs(0)` |
 | The setpoint read back differs from the command | A ramp is active, or the instrument rounded it | `SetMaxSetpointRamp(0)` to disable ramping |

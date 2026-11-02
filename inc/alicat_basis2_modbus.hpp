@@ -122,9 +122,43 @@ inline std::size_t BuildWriteMultiple(uint8_t  unit_addr,
     return AppendCrc(out, 7 + count * 2);
 }
 
+/// Length of a Modbus-RTU exception reply: address, function | 0x80, exception code, CRC-16.
+inline constexpr std::size_t kExceptionFrameLength = 5;
+
+/// Number of reply bytes a receiver reads before it can tell an exception reply (bit 7 of the
+/// function code set) from a normal one: address, function code, and one more byte.
+inline constexpr std::size_t kReplyHeaderLength = 3;
+
+/// @return `true` when `frame` (at least 2 bytes) is an exception reply (function code bit 7 set).
+inline bool IsExceptionReply(const uint8_t* frame, std::size_t length) noexcept {
+  return length >= 2 && (frame[1] & reg::fn::ExceptionMask) != 0;
+}
+
 //==============================================================================
 // RESPONSE PARSERS — return the number of registers extracted, or 0 on error.
 //==============================================================================
+
+/**
+ * @brief Parse a 5-byte exception reply (Modbus Application Protocol V1.1b3, section 7).
+ * @param expected_fn  Function code of the request (the reply carries `expected_fn | 0x80`).
+ * @param[out] code    Exception code, written only when the frame is a valid exception reply.
+ * @return `ModbusException` for a valid exception reply; `InvalidFrame` for a wrong length,
+ *         `BadCrc` for a CRC mismatch, `ResponseMismatch` for another address or function.
+ */
+inline DriverError ParseException(const uint8_t* frame, std::size_t length, uint8_t expected_addr,
+                                  uint8_t expected_fn, uint8_t* code) noexcept {
+  if (length != kExceptionFrameLength)
+    return DriverError::InvalidFrame;
+  if (!CheckCrc(frame, length))
+    return DriverError::BadCrc;
+  if (frame[0] != expected_addr)
+    return DriverError::ResponseMismatch;
+  if (frame[1] != (expected_fn | reg::fn::ExceptionMask))
+    return DriverError::ResponseMismatch;
+  if (code)
+    *code = frame[2];
+  return DriverError::ModbusException;
+}
 
 /// Parse a Function-03 response into `regs[]`. `expected_count` is the number
 /// of 16-bit registers the master asked for.

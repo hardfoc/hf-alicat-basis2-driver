@@ -142,6 +142,7 @@ void errors(Driver& meter) {
     case al::DriverError::BadCrc:          // noise, termination, a second slave answering
       break;
     case al::DriverError::ModbusException: // the instrument refused: register, value, meter vs controller
+      std::printf("exception %s\n", al::ToString(meter.GetLastException()).data());
       break;
     default:
       std::printf("%s\n", al::ToString(r.error).data());

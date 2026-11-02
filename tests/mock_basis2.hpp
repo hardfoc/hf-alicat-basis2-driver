@@ -29,10 +29,17 @@ public:
     respond(frame);
   }
 
-  std::size_t read(uint8_t* out, std::size_t max, uint32_t /*timeout_ms*/) noexcept {
+  // Like a real UART read: returns at once when `max` bytes are there, otherwise after the whole
+  // timeout with what arrived. Every expired timeout is counted, and its length added to
+  // `waited_ms`.
+  std::size_t read(uint8_t* out, std::size_t max, uint32_t timeout_ms) noexcept {
     const std::size_t n = std::min(max, rx_.size());
     std::copy_n(rx_.begin(), n, out);
     rx_.erase(rx_.begin(), rx_.begin() + static_cast<std::ptrdiff_t>(n));
+    if (n < max) {
+      ++timeouts;
+      waited_ms += timeout_ms;
+    }
     return n;
   }
 
@@ -43,6 +50,8 @@ public:
   std::map<uint16_t, uint16_t> regs;          ///< Holding registers the instrument implements.
   std::vector<std::vector<uint8_t>> requests; ///< Every frame the driver wrote.
   bool corrupt_crc = false;                   ///< Flip a CRC bit in the next replies.
+  unsigned timeouts = 0;                      ///< read() calls that waited the full timeout.
+  unsigned long waited_ms = 0;                ///< Total time read() spent waiting for bytes.
   uint8_t address;                            ///< Modbus address the mock answers to.
 
 private:
