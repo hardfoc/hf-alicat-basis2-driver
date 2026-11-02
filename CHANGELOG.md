@@ -44,6 +44,13 @@ affected API.
   examples' `delay_ms_impl()` rounded short sleeps down to zero ticks and now sleeps at least the time asked
   for. (Modbus over Serial Line V1.02, sections 2.5.1 and 2.5.1.1; manual Rev 4, p. 18 for the baud rates.)
 
+- `cmake --install` installed nothing, and the package config included its targets file as `OPTIONAL`, so
+  `find_package(hf_alicat_basis2)` succeeded without defining a target. The install now puts every header of
+  `inc/` and `alicat_basis2_version.h` in `include/hf_alicat_basis2/` and exports the target as `hf::alicat_basis2`
+  (the documented name; without `EXPORT_NAME` it would have been `hf::hf_alicat_basis2`). New option
+  `HF_ALICAT_BASIS2_INSTALL` (on for a top-level build). A CTest installs to a temporary prefix and builds a
+  `find_package()` consumer.
+
 ### Changed
 
 - `kInterFrameDelayMs` is deprecated: the driver never used it.

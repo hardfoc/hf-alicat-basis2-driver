@@ -36,6 +36,27 @@ either.
 | --- | --- | --- |
 | `HF_ALICAT_BASIS2_ENABLE_WARNINGS` | `OFF` | Adds `-Wall -Wextra -Wpedantic` to targets that link the driver |
 | `HF_ALICAT_BASIS2_BUILD_TESTS` | `OFF` | Builds the host unit tests in `tests/` ([Testing and CI](testing.md)) |
+| `HF_ALICAT_BASIS2_INSTALL` | `ON` when top-level | Generates the install rules (below); off under `add_subdirectory()` |
+
+## Install and find_package
+
+Install the headers and the CMake package once, then use it from any project:
+
+```bash
+cmake -S external/hf-alicat-basis2-driver -B build-alicat
+cmake --install build-alicat --prefix /opt/hardfoc
+```
+
+```cmake
+find_package(hf_alicat_basis2 1.0 REQUIRED)   # CMAKE_PREFIX_PATH=/opt/hardfoc
+target_link_libraries(my_app PRIVATE hf::alicat_basis2)
+```
+
+The install puts every header of `inc/` and the generated `alicat_basis2_version.h` in
+`include/hf_alicat_basis2/`, and the package files in `lib/cmake/hf_alicat_basis2/`. The imported target is
+`hf::alicat_basis2`, the same name as with `add_subdirectory()`, with the include directory and `cxx_std_17`; you
+still write `#include "alicat_basis2.hpp"`. The version check accepts the same major version. A host test installs
+to a temporary prefix and builds a `find_package()` consumer on every pull request.
 
 ## ESP-IDF
 
@@ -50,7 +71,7 @@ path is wrong. Your component then declares `REQUIRES hf_alicat_basis2`.
 | Layer | File | Role |
 | --- | --- | --- |
 | Settings | [`cmake/hf_alicat_basis2_build_settings.cmake`](../cmake/hf_alicat_basis2_build_settings.cmake) | Target name, include directories, version: the single source of truth |
-| Library | [`CMakeLists.txt`](../CMakeLists.txt) | `INTERFACE` target, package config, host tests |
+| Library | [`CMakeLists.txt`](../CMakeLists.txt) | `INTERFACE` target, install rules, package config, host tests |
 | ESP-IDF | [`examples/esp32/components/hf_alicat_basis2/CMakeLists.txt`](../examples/esp32/components/hf_alicat_basis2/CMakeLists.txt) | IDF component wrapper over the same settings |
 
 The version is set once in the settings file and written into `alicat_basis2_version.h` (in the build tree, under

@@ -1,6 +1,6 @@
 @PACKAGE_INIT@
 
-include("${CMAKE_CURRENT_LIST_DIR}/hf_alicat_basis2ConfigVersion.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/hf_alicat_basis2Targets.cmake" OPTIONAL)
+# Imported target: hf::alicat_basis2 (header-only, C++17).
+include("${CMAKE_CURRENT_LIST_DIR}/hf_alicat_basis2Targets.cmake")
 
 check_required_components(hf_alicat_basis2)

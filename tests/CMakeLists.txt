@@ -36,3 +36,15 @@ target_link_libraries(hf_alicat_basis2_doc_snippets PRIVATE ${HF_ALICAT_BASIS2_T
 target_include_directories(hf_alicat_basis2_doc_snippets PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/docs)
 target_compile_features(hf_alicat_basis2_doc_snippets PRIVATE cxx_std_17)
 target_compile_options(hf_alicat_basis2_doc_snippets PRIVATE -Wall -Wextra)
+
+# Install the driver to a temporary prefix and build a find_package() consumer against it (the documented way to
+# use an installed driver). Needs the install rules (HF_ALICAT_BASIS2_INSTALL, on for a top-level build).
+if(HF_ALICAT_BASIS2_INSTALL)
+  add_test(NAME hf_alicat_basis2_install_consumer
+    COMMAND ${CMAKE_COMMAND}
+      -DBUILD_DIR=${PROJECT_BINARY_DIR}
+      -DSOURCE_DIR=${PROJECT_SOURCE_DIR}
+      -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/install-check
+      -DCXX_COMPILER=${CMAKE_CXX_COMPILER}
+      -P ${CMAKE_CURRENT_SOURCE_DIR}/install/run_install_test.cmake)
+endif()
