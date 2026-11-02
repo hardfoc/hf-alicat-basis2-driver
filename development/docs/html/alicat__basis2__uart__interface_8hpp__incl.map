@@ -1,9 +1,0 @@
-<map id="inc/alicat_basis2_uart_interface.hpp" name="inc/alicat_basis2_uart_interface.hpp">
-<area shape="rect" id="Node000001" title="CRTP serial transport for the Alicat BASIS&#45;2 driver." alt="" coords="49,5,211,50"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="5,98,71,126"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="108,49,66,90,62,85,103,51"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="95,98,165,126"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="132,48,132,83,128,81,128,52"/>
-<area shape="rect" id="Node000004" title=" " alt="" coords="188,98,280,126"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="158,48,208,88,203,88,156,53"/>
-</map>
