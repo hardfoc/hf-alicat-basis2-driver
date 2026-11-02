@@ -1,0 +1,47 @@
+{
+  "calls": [
+    "ReadInstantaneous",
+    "ReadIdentity",
+    "SetSetpoint",
+    "SetSetpointSource",
+    "SetCommWatchdogMs",
+    "SetMaxSetpointRamp",
+    "Tare",
+    "SetAutotareEnabled",
+    "SetGas",
+    "ResetTotalizer",
+    "SetTotalizerLimitMode",
+    "SetTotalizerBatch",
+    "SetFlowAveragingMs",
+    "SetReferenceTemperatureC",
+    "ConfigureMeasurementTrigger",
+    "StartMeasurementSamples",
+    "ReadMeasurement",
+    "SetModbusAddress",
+    "SetAsciiUnitId",
+    "SetBaudRate",
+    "FactoryRestore",
+    "DiscoverPresentAddresses",
+    "WriteSingleRegister",
+    "WriteMultipleRegisters"
+  ],
+  "framing": [
+    "BuildReadHolding",
+    "BuildWriteSingle",
+    "BuildWriteMultiple",
+    "ParseReadHolding",
+    "ParseWriteSingleEcho",
+    "ParseWriteMultipleEcho"
+  ],
+  "port_hooks": [
+    "write",
+    "read",
+    "flush_rx",
+    "delay_ms_impl"
+  ],
+  "sources": [
+    "inc/alicat_basis2.hpp:Driver members",
+    "inc/alicat_basis2_modbus.hpp:frame builders",
+    "inc/alicat_basis2_uart_interface.hpp:UartInterface"
+  ]
+}

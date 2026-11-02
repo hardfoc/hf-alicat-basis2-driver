@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="977" viewBox="0 0 1200 977" role="img" aria-labelledby="driver-layers-title driver-layers-desc" font-family="Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+<title id="driver-layers-title">Three layers, one of them yours</title>
+<desc id="driver-layers-desc">Layer diagram: the application calls the hardware-agnostic BASIS-2 driver, which builds Modbus-RTU frames with a CRC-16, which go through the serial interface your platform port implements, which drives the UART, the RS-485 or RS-232 transceiver and the BASIS-2 instruments on the bus.</desc>
+<defs><marker id="fk-arrow-rail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6C7889"/></marker></defs>
+<rect x="0.5" y="0.5" width="1199" height="976" rx="16" fill="#0E131A" stroke="#283241"/>
+<text x="32" y="46.8" font-size="16" font-weight="700" letter-spacing="1.2" fill="#C7CBFF">ARCHITECTURE</text>
+<text x="32" y="85.6" font-size="32" font-weight="700" fill="#E8EDF3">Three layers, one of them yours</text>
+<text x="32" y="115.4" font-size="18" fill="#9AA6B5">The driver and the framing are the same on every MCU. The port is a small class with three methods.</text>
+<rect x="32" y="131.4" width="1136" height="1" fill="#252F3C"/>
+<rect x="32" y="278.4" width="1136" height="225" rx="16" fill="#1C1F3D" stroke="#3B4080" stroke-width="1.2"/>
+<path d="M600 242.4 L600 274.4" fill="none" stroke="#6C7889" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fk-arrow-rail)"/>
+<path d="M600 507.4 L600 539.4" fill="none" stroke="#6C7889" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fk-arrow-rail)"/>
+<path d="M600 661.4 L600 693.4" fill="none" stroke="#6C7889" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fk-arrow-rail)"/>
+<path d="M600 789.4 L600 821.4" fill="none" stroke="#6C7889" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fk-arrow-rail)"/>
+<rect x="32" y="149.4" width="1136" height="89" rx="12" fill="#151C26" stroke="#3A4657" stroke-width="1"/>
+<rect x="32" y="157.4" width="4" height="73" rx="2" fill="#94A3B8"/>
+<rect x="32" y="543.4" width="1136" height="114" rx="12" fill="#1C1F3D" stroke="#8C93FF" stroke-width="1.4"/>
+<rect x="32" y="551.4" width="4" height="98" rx="2" fill="#8C93FF"/>
+<rect x="32" y="697.4" width="1136" height="88" rx="12" fill="#0F2A28" stroke="#2DD4BF" stroke-width="1.4"/>
+<rect x="32" y="705.4" width="4" height="72" rx="2" fill="#2DD4BF"/>
+<rect x="32" y="825.4" width="1136" height="89" rx="12" fill="#151C26" stroke="#3A4657" stroke-width="1"/>
+<rect x="32" y="833.4" width="4" height="73" rx="2" fill="#94A3B8"/>
+<text x="56" y="184.4" font-size="20" font-weight="700" fill="#E8EDF3">Your application</text>
+<text x="56" y="215" font-size="17" fill="#D2DAE4">one Driver per instrument: read flow, command setpoints, tare</text>
+<rect x="48" y="323.4" width="176.4" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="56" y="341.5" font-size="16" font-weight="700" fill="#C7CBFF">ReadInstantaneous</text>
+<rect x="232.4" y="323.4" width="121.1" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="240.4" y="341.5" font-size="16" font-weight="700" fill="#C7CBFF">ReadIdentity</text>
+<rect x="361.5" y="323.4" width="113.3" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="369.5" y="341.5" font-size="16" font-weight="700" fill="#C7CBFF">SetSetpoint</text>
+<rect x="482.8" y="323.4" width="172.4" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="490.8" y="341.5" font-size="16" font-weight="700" fill="#C7CBFF">SetSetpointSource</text>
+<rect x="663.2" y="323.4" width="208.6" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="671.2" y="341.5" font-size="16" font-weight="700" fill="#C7CBFF">SetCommWatchdogMs</text>
+<rect x="879.8" y="323.4" width="195.9" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="887.8" y="341.5" font-size="16" font-weight="700" fill="#C7CBFF">SetMaxSetpointRamp</text>
+<rect x="1083.7" y="323.4" width="54.2" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="1091.7" y="341.5" font-size="16" font-weight="700" fill="#C7CBFF">Tare</text>
+<rect x="48" y="357.4" width="183.1" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="56" y="375.5" font-size="16" font-weight="700" fill="#C7CBFF">SetAutotareEnabled</text>
+<rect x="239.1" y="357.4" width="75.5" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="247.1" y="375.5" font-size="16" font-weight="700" fill="#C7CBFF">SetGas</text>
+<rect x="322.6" y="357.4" width="136.8" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="330.6" y="375.5" font-size="16" font-weight="700" fill="#C7CBFF">ResetTotalizer</text>
+<rect x="467.4" y="357.4" width="204.6" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="475.4" y="375.5" font-size="16" font-weight="700" fill="#C7CBFF">SetTotalizerLimitMode</text>
+<rect x="679.9" y="357.4" width="164.9" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="687.9" y="375.5" font-size="16" font-weight="700" fill="#C7CBFF">SetTotalizerBatch</text>
+<rect x="852.9" y="357.4" width="194.4" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="860.9" y="375.5" font-size="16" font-weight="700" fill="#C7CBFF">SetFlowAveragingMs</text>
+<rect x="48" y="391.4" width="249.9" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="56" y="409.5" font-size="16" font-weight="700" fill="#C7CBFF">SetReferenceTemperatureC</text>
+<rect x="305.9" y="391.4" width="275.6" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="313.9" y="409.5" font-size="16" font-weight="700" fill="#C7CBFF">ConfigureMeasurementTrigger</text>
+<rect x="589.5" y="391.4" width="242.8" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="597.5" y="409.5" font-size="16" font-weight="700" fill="#C7CBFF">StartMeasurementSamples</text>
+<rect x="840.3" y="391.4" width="172.9" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="848.3" y="409.5" font-size="16" font-weight="700" fill="#C7CBFF">ReadMeasurement</text>
+<rect x="48" y="425.4" width="181.1" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="56" y="443.5" font-size="16" font-weight="700" fill="#C7CBFF">SetModbusAddress</text>
+<rect x="237.1" y="425.4" width="134" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="245.1" y="443.5" font-size="16" font-weight="700" fill="#C7CBFF">SetAsciiUnitId</text>
+<rect x="379.1" y="425.4" width="123" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="387.1" y="443.5" font-size="16" font-weight="700" fill="#C7CBFF">SetBaudRate</text>
+<rect x="510.1" y="425.4" width="143.9" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="518.1" y="443.5" font-size="16" font-weight="700" fill="#C7CBFF">FactoryRestore</text>
+<rect x="662" y="425.4" width="243.9" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="670" y="443.5" font-size="16" font-weight="700" fill="#C7CBFF">DiscoverPresentAddresses</text>
+<rect x="913.9" y="425.4" width="182.4" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="921.9" y="443.5" font-size="16" font-weight="700" fill="#C7CBFF">WriteSingleRegister</text>
+<rect x="48" y="459.4" width="207.3" height="26" rx="13" fill="#1C1F3D" stroke="#3B4080" stroke-width="1"/>
+<text x="56" y="477.5" font-size="16" font-weight="700" fill="#C7CBFF">WriteMultipleRegisters</text>
+<text x="48" y="307.4" font-size="17" font-weight="700" fill="#C7CBFF">HARDWARE-AGNOSTIC CORE</text>
+<text x="326.2" y="307.4" font-size="16" fill="#C7CBFF">Driver&lt;UartT&gt;, inc/alicat_basis2.hpp</text>
+<text x="56" y="578.4" font-size="20" font-weight="700" fill="#C7CBFF">Modbus-RTU framing</text>
+<text x="56" y="609" font-size="17" fill="#D2DAE4">functions 03, 06 and 16, CRC-16 on every frame, replies checked against the request:</text>
+<text x="56" y="633.7" font-size="17" fill="#D2DAE4">BuildReadHolding  BuildWriteSingle  BuildWriteMultiple  ParseReadHolding  ParseWriteSingleEcho  ParseWriteMultipleEcho</text>
+<text x="56" y="732.4" font-size="20" font-weight="700" fill="#A7F3E6">Platform port (your class, derived from UartInterface)</text>
+<text x="56" y="761.6" font-size="16" font-family="'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace" fill="#D2DAE4">write()  read()  flush_rx()  delay_ms_impl()</text>
+<text x="56" y="860.4" font-size="20" font-weight="700" fill="#E8EDF3">UART, transceiver, BASIS-2 instruments</text>
+<text x="56" y="891" font-size="17" fill="#D2DAE4">RS-485 multidrop (addresses 1 to 247) or RS-232, 8N1, 4800 to 115200 baud</text>
+<rect x="32" y="926.8" width="14" height="14" rx="4" fill="#1C1F3D" stroke="#8C93FF" stroke-width="1.4"/>
+<text x="54" y="941.4" font-size="16" fill="#9AA6B5">this library</text>
+<rect x="161.8" y="926.8" width="14" height="14" rx="4" fill="#0F2A28" stroke="#2DD4BF" stroke-width="1.4"/>
+<text x="183.8" y="941.4" font-size="16" fill="#9AA6B5">you write</text>
+<rect x="282.1" y="926.8" width="14" height="14" rx="4" fill="#1B232E" stroke="#94A3B8" stroke-width="1.4"/>
+<text x="304.1" y="941.4" font-size="16" fill="#9AA6B5">hardware</text>
+</svg>

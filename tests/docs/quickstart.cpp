@@ -4,10 +4,10 @@
  */
 #include "my_uart.hpp"
 
-#include <cstdio>
-
 // --8<-- [start:quickstart]
 #include "alicat_basis2.hpp"
+
+#include <cstdio>
 
 int read_flow_once(MyUart& uart) {
   alicat_basis2::Driver<MyUart> meter(uart, 1);         // Modbus address 1, 200 ms timeout
