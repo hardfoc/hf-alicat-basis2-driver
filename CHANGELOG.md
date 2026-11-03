@@ -5,6 +5,15 @@ affected API.
 
 ## Unreleased
 
+### Breaking
+
+- The port's `write()` returns `bool` (`true` = every byte accepted, `false` = serial error) instead of `void`;
+  a port whose `write()` returns anything else is rejected at compile time. A failed write fails the call with
+  `DriverError::SerialError` at once: the driver no longer waits out the read timeout for a reply to a request
+  that was never sent and reports `Timeout`, and a broadcast (`address 0`) that was not sent is no longer
+  reported as a success. **BREAKING** for ports: change `void write(...)` to `bool write(...)` and return the
+  UART's result.
+
 ### Added
 
 - Host unit tests (`-DHF_ALICAT_BASIS2_BUILD_TESTS=ON`) against a mock BASIS-2 Modbus slave, and a CI workflow.
