@@ -1,0 +1,8 @@
+<map id="inc/alicat_basis2_types.hpp" name="inc/alicat_basis2_types.hpp">
+<area shape="rect" id="Node000001" title="Public type definitions for the Alicat BASIS&#45;2 driver." alt="" coords="5,5,207,31"/>
+<area shape="rect" id="Node000002" href="$alicat__basis2_8hpp.html" title="Hardware&#45;agnostic driver for Alicat BASIS&#45;2 mass&#45;flow meters and controllers (B&#45;Series / BC&#45;Series)." alt="" coords="27,152,185,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="85,43,71,60,61,79,59,99,67,119,94,150,90,154,62,121,54,100,55,78,66,57,80,39"/>
+<area shape="rect" id="Node000003" href="$alicat__basis2__modbus_8hpp.html" title="Modbus&#45;RTU framing and CRC&#45;16 helpers used by the BASIS&#45;2 driver." alt="" coords="71,79,288,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="130,38,169,77,166,80,126,42"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="159,116,120,154,116,150,156,112"/>
+</map>
