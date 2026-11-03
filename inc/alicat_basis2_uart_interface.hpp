@@ -7,7 +7,7 @@
  *          a concrete adapter inheriting from this CRTP base, implementing
  *          three small methods:
  *
- *            void write(const uint8_t* data, std::size_t length);
+ *            bool write(const uint8_t* data, std::size_t length); // true = all sent
  *            std::size_t read(uint8_t* out, std::size_t max, uint32_t timeout_ms);
  *            void flush_rx();
  *
@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <type_traits>
+#include <utility>
 
 namespace alicat_basis2 {
 
@@ -53,9 +54,17 @@ public:
     /**
      * @brief Send `length` bytes synchronously. Must block until all bytes
      *        are accepted by the underlying serial driver.
+     * @return `true` when every byte was accepted; `false` on a serial error
+     *         (the driver then fails the request with `DriverError::SerialError`
+     *         and does not wait for a reply). A port's `write()` must return
+     *         `bool`; one returning anything else is rejected at compile time.
      */
-    void write(const uint8_t* data, std::size_t length) noexcept {
-        static_cast<Derived*>(this)->write(data, length);
+    bool write(const uint8_t* data, std::size_t length) noexcept {
+        static_assert(
+            std::is_same_v<decltype(std::declval<Derived&>().write(data, length)), bool>,
+            "alicat_basis2::UartInterface: the port's write(const uint8_t*, std::size_t) must "
+            "return bool (true = every byte accepted, false = serial error)");
+        return static_cast<Derived*>(this)->write(data, length);
     }
 
     /**

@@ -16,7 +16,7 @@ namespace {
 
 /// A port with no optional hook: delay_ms() and log() compile and do nothing.
 struct BarePort : al::UartInterface<BarePort> {
-  void write(const uint8_t*, std::size_t) noexcept {}
+  bool write(const uint8_t*, std::size_t) noexcept { return true; }
   std::size_t read(uint8_t*, std::size_t, uint32_t) noexcept {
     return 0;
   }
