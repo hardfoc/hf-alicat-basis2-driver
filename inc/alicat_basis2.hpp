@@ -46,6 +46,8 @@
 
 #include <array>
 #include <cstdint>
+#include <type_traits>
+#include <utility>
 #include <cstddef>
 #include <cstring>
 
@@ -68,6 +70,12 @@ inline const char* GetDriverVersion() noexcept {
  */
 template <typename UartT>
 class Driver {
+    static_assert(std::is_same_v<decltype(std::declval<UartT&>().write(
+                                     static_cast<const uint8_t*>(nullptr), std::size_t{0})),
+                                 bool>,
+                  "alicat_basis2::Driver: the port's write(const uint8_t*, std::size_t) must return bool "
+                  "(true = every byte accepted, false = serial error)");
+
 public:
     /**
      * @brief Construct a driver bound to one bus + one slave address.
