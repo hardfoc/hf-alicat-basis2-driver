@@ -1,9 +1,0 @@
-var searchData=
-[
-  ['read_0',['read',['../classalicat__basis2_1_1_uart_interface.html#a1bf48ef2d2d7af8b8c67433d3c07945b',1,'alicat_basis2::UartInterface']]],
-  ['readholdingregisters_1',['ReadHoldingRegisters',['../classalicat__basis2_1_1_driver.html#aeac4a0461946b433f7747cdc2e9b59d7',1,'alicat_basis2::Driver']]],
-  ['readidentity_2',['ReadIdentity',['../classalicat__basis2_1_1_driver.html#ae4235626498c4da16dabb9c9e5b263e4',1,'alicat_basis2::Driver']]],
-  ['readinstantaneous_3',['ReadInstantaneous',['../classalicat__basis2_1_1_driver.html#acc8983fd9dbf00ab2e53578d1d902f0a',1,'alicat_basis2::Driver']]],
-  ['readmeasurement_4',['ReadMeasurement',['../classalicat__basis2_1_1_driver.html#a89f9ec131f789870d7a46e1984f843ea',1,'alicat_basis2::Driver']]],
-  ['resettotalizer_5',['ResetTotalizer',['../classalicat__basis2_1_1_driver.html#aa4ca96e880f72e51eee6047009d43b0f',1,'alicat_basis2::Driver']]]
-];
