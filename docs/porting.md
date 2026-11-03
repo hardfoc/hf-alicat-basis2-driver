@@ -21,7 +21,7 @@ calls are resolved at compile time, so there are no virtual functions, no vtable
 
 | Method | Required | Contract |
 | --- | :---: | --- |
-| `write(const uint8_t* data, std::size_t length)` | yes | Send all `length` bytes; return once they are accepted by the UART (better: on the wire) |
+| `bool write(const uint8_t* data, std::size_t length)` | yes | Send all `length` bytes; return once they are accepted by the UART (better: on the wire). Return `true` when every byte was taken, `false` on a UART error: the call then fails with `DriverError::SerialError` and the driver does not wait for a reply. Must return `bool` (checked at compile time) |
 | `read(uint8_t* out, std::size_t max, uint32_t timeout_ms)` | yes | Return when `max` bytes arrived or `timeout_ms` passed; the return value is the number of bytes in `out` |
 | `flush_rx()` | yes | Discard every byte already received |
 | `delay_ms_impl(uint32_t ms)` | optional | Sleep at least `ms`; `UartInterface::delay_ms()` calls it when present and does nothing otherwise (there is no portable time base for a busy-wait) |

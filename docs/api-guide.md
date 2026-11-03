@@ -140,6 +140,7 @@ with their scaling. `ReadHoldingRegisters()` reads up to 32 registers; `WriteMul
 | `DriverError` | Meaning | Where to look |
 | --- | --- | --- |
 | `Timeout` | No byte arrived within the timeout | Wiring, baud rate, address, DE/RE, the timeout |
+| `SerialError` | The port's `write()` returned `false`: the request was not sent, and no reply was awaited (also for a broadcast) | The UART driver, its TX buffer, the port |
 | `InvalidFrame` | Too short, wrong byte count | Line noise, a `read()` that returns early |
 | `BadCrc` | CRC-16 mismatch | Ground, termination, two instruments at one address |
 | `ModbusException` | The instrument returned an exception reply; `GetLastException()` has the code | Register not in this model or firmware (`IllegalDataAddress`), a meter asked for a controller setting |
