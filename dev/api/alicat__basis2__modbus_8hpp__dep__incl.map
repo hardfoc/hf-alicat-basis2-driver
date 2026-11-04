@@ -1,0 +1,5 @@
+<map id="inc/alicat_basis2_modbus.hpp" name="inc/alicat_basis2_modbus.hpp">
+<area shape="rect" id="Node000001" title="Modbus&#45;RTU framing and CRC&#45;16 helpers used by the BASIS&#45;2 driver." alt="" coords="5,5,223,31"/>
+<area shape="rect" id="Node000002" href="$alicat__basis2_8hpp.html" title="Hardware&#45;agnostic driver for Alicat BASIS&#45;2 mass&#45;flow meters and controllers (B&#45;Series / BC&#45;Series)." alt="" coords="35,79,193,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="117,44,117,79,111,79,111,44"/>
+</map>
