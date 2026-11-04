@@ -12,7 +12,7 @@
 #include <cstdio>
 
 struct NullPort : alicat_basis2::UartInterface<NullPort> {
-  void write(const uint8_t*, std::size_t) noexcept {}
+  bool write(const uint8_t*, std::size_t) noexcept { return true; }
   std::size_t read(uint8_t*, std::size_t, uint32_t) noexcept { return 0; }
   void flush_rx() noexcept {}
 };

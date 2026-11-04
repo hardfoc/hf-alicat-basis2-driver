@@ -46,6 +46,8 @@
 
 #include <array>
 #include <cstdint>
+#include <type_traits>
+#include <utility>
 #include <cstddef>
 #include <cstring>
 
@@ -68,6 +70,12 @@ inline const char* GetDriverVersion() noexcept {
  */
 template <typename UartT>
 class Driver {
+    static_assert(std::is_same_v<decltype(std::declval<UartT&>().write(
+                                     static_cast<const uint8_t*>(nullptr), std::size_t{0})),
+                                 bool>,
+                  "alicat_basis2::Driver: the port's write(const uint8_t*, std::size_t) must return bool "
+                  "(true = every byte accepted, false = serial error)");
+
 public:
     /**
      * @brief Construct a driver bound to one bus + one slave address.
@@ -621,9 +629,12 @@ public:
         std::array<uint8_t, 5 + 2 * 32> rx{};  // up to 32 regs per call
         if (need > rx.size()) return DriverError::BufferTooSmall;
 
-        SendRequest(tx.data(), tx_len);
+        DriverError rc = SendRequest(tx.data(), tx_len);
+        if (rc != DriverError::None) {
+          return LogFailure(rc, reg::fn::ReadHolding, reg_addr);
+        }
         std::size_t got = 0;
-        DriverError rc = ReceiveReply(reg::fn::ReadHolding, rx.data(), need, got);
+        rc = ReceiveReply(reg::fn::ReadHolding, rx.data(), need, got);
         if (rc == DriverError::None) {
           rc = modbus::ParseReadHolding(rx.data(), got, address_, count, out);
         }
@@ -642,14 +653,17 @@ public:
                                                             tx.data(), tx.size());
         if (tx_len == 0) return DriverResult<void>::failure(DriverError::BufferTooSmall);
 
-        SendRequest(tx.data(), tx_len);
+        DriverError rc = SendRequest(tx.data(), tx_len);
+        if (rc != DriverError::None) {
+          return DriverResult<void>{LogFailure(rc, reg::fn::WriteSingle, reg_addr)};
+        }
 
         // Broadcast → no response.
         if (address_ == kBroadcastAddress) return DriverResult<void>::success();
 
         std::array<uint8_t, 8> rx{};
         std::size_t got = 0;
-        DriverError rc = ReceiveReply(reg::fn::WriteSingle, rx.data(), rx.size(), got);
+        rc = ReceiveReply(reg::fn::WriteSingle, rx.data(), rx.size(), got);
         if (rc == DriverError::None) {
           rc = modbus::ParseWriteSingleEcho(rx.data(), got, tx.data(), tx_len);
         }
@@ -672,13 +686,16 @@ public:
                                                               tx.data(), tx.size());
         if (tx_len == 0) return DriverResult<void>::failure(DriverError::BufferTooSmall);
 
-        SendRequest(tx.data(), tx_len);
+        DriverError rc = SendRequest(tx.data(), tx_len);
+        if (rc != DriverError::None) {
+          return DriverResult<void>{LogFailure(rc, reg::fn::WriteMultiple, reg_addr)};
+        }
 
         if (address_ == kBroadcastAddress) return DriverResult<void>::success();
 
         std::array<uint8_t, 8> rx{};
         std::size_t got = 0;
-        DriverError rc = ReceiveReply(reg::fn::WriteMultiple, rx.data(), rx.size(), got);
+        rc = ReceiveReply(reg::fn::WriteMultiple, rx.data(), rx.size(), got);
         if (rc == DriverError::None) {
           rc = modbus::ParseWriteMultipleEcho(rx.data(), got, address_, reg_addr, count);
         }
@@ -723,12 +740,15 @@ private:
    * guarantees the idle time Modbus over Serial Line V1.02 section 2.5.1.1
    * requires before a new frame. Rounded up to whole milliseconds; a no-op
    * when the port has no `delay_ms_impl()`.
+   *
+   * @return `None`, or `SerialError` when the port's `write()` reported that
+   *         the frame was not sent (no reply will come, so none is awaited).
    */
-  void SendRequest(const uint8_t* tx, std::size_t tx_len) noexcept {
+  DriverError SendRequest(const uint8_t* tx, std::size_t tx_len) noexcept {
     last_exception_ = ModbusExceptionCode::None;
     uart_.delay_ms(modbus::InterFrameGapMs(bus_bps_));
     uart_.flush_rx();
-    uart_.write(tx, tx_len);
+    return uart_.write(tx, tx_len) ? DriverError::None : DriverError::SerialError;
   }
 
   /**

@@ -26,12 +26,17 @@ public:
 
   // --- UartInterface ----------------------------------------------------------------------------
 
-  void write(const uint8_t* data, std::size_t length) noexcept {
+  bool write(const uint8_t* data, std::size_t length) noexcept {
+    if (write_fails) {
+      ++failed_writes;
+      return false; // the UART did not take the frame: nothing goes out, no reply comes
+    }
     idle_before_write.push_back(idle_ms_);
     idle_ms_ = 0;
     std::vector<uint8_t> frame(data, data + length);
     requests.push_back(frame);
     respond(frame);
+    return true;
   }
 
   // Like a real UART read: returns at once when `max` bytes are there, otherwise after the whole
@@ -74,6 +79,8 @@ public:
   unsigned timeouts = 0;                      ///< read() calls that waited the full timeout.
   unsigned long waited_ms = 0;                ///< Total time read() spent waiting for bytes.
   std::vector<std::string> logs;              ///< Every line the driver logged.
+  bool write_fails = false;    ///< Fault injection: write() reports a serial error.
+  int failed_writes = 0;       ///< write() calls that reported an error.
   std::vector<uint32_t> idle_before_write; ///< Sleep (ms) since the last bus activity, per write.
   uint8_t address;                            ///< Modbus address the mock answers to.
 

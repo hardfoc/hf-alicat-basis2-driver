@@ -15,7 +15,7 @@
 #include <cstdint>
 
 // Platform hooks: your SDK's calls. Declared only, so the docs build checks the port compiles.
-void platform_uart_write(const uint8_t* data, std::size_t len) noexcept;  // blocks until sent
+bool platform_uart_write(const uint8_t* data, std::size_t len) noexcept; // blocks; false on error
 // Returns when `max` bytes arrived or `timeout_ms` passed, with the number of bytes read.
 std::size_t platform_uart_read(uint8_t* out, std::size_t max, uint32_t timeout_ms) noexcept;
 void platform_uart_flush_rx() noexcept;
@@ -25,9 +25,10 @@ void platform_log(const char* tag, const char* fmt, va_list ap) noexcept;
 // --8<-- [start:port]
 class MyUart : public alicat_basis2::UartInterface<MyUart> {
 public:
-  // Send a whole Modbus request; return once the last byte is on the wire.
-  void write(const uint8_t* data, std::size_t length) noexcept {
-    platform_uart_write(data, length);
+  // Send a whole Modbus request; return once the last byte is on the wire. Return false when the
+  // UART did not take every byte: the driver then fails the call with SerialError.
+  bool write(const uint8_t* data, std::size_t length) noexcept {
+    return platform_uart_write(data, length);
   }
 
   // Wait for up to `max` bytes; return early only when all of them arrived.

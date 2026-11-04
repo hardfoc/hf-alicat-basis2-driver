@@ -33,8 +33,11 @@ constexpr std::uint8_t kModbusAddr = 1;
 
 class EspUartAdapter : public al::UartInterface<EspUartAdapter> {
 public:
-    void write(const std::uint8_t* data, std::size_t len) noexcept {
-        if (len > 0) uart_write_bytes(kUartPort, data, len);
+    // True when the UART took every byte; uart_write_bytes() returns -1 on an error.
+    bool write(const std::uint8_t* data, std::size_t len) noexcept {
+        if (len == 0) return true;
+        const int n = uart_write_bytes(kUartPort, data, len);
+        return n >= 0 && static_cast<std::size_t>(n) == len;
     }
     std::size_t read(std::uint8_t* out, std::size_t max, std::uint32_t timeout_ms) noexcept {
         const int n = uart_read_bytes(kUartPort, out, max, pdMS_TO_TICKS(timeout_ms));
