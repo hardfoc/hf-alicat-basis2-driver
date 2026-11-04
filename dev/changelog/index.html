@@ -887,6 +887,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#breaking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#added" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1007,6 +1018,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#breaking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#added" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1101,6 +1123,15 @@
 <p>What changed in each release of the driver. Entries marked <strong>BREAKING</strong> need source changes in code that used the
 affected API.</p>
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<h3 id="breaking">Breaking<a class="headerlink" href="#breaking" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The port's <code>write()</code> returns <code>bool</code> (<code>true</code> = every byte accepted, <code>false</code> = serial error) instead of <code>void</code>;
+  a port whose <code>write()</code> returns anything else is rejected at compile time. A failed write fails the call with
+  <code>DriverError::SerialError</code> at once: the driver no longer waits out the read timeout for a reply to a request
+  that was never sent and reports <code>Timeout</code>, and a broadcast (<code>address 0</code>) that was not sent is no longer
+  reported as a success. <strong>BREAKING</strong> for ports: change <code>void write(...)</code> to <code>bool write(...)</code> and return the
+  UART's result.</li>
+</ul>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Host unit tests (<code>-DHF_ALICAT_BASIS2_BUILD_TESTS=ON</code>) against a mock BASIS-2 Modbus slave, and a CI workflow.</li>

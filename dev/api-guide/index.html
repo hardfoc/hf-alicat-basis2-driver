@@ -1235,7 +1235,7 @@
 <h1 id="api-guide">API guide<a class="headerlink" href="#api-guide" title="Permanent link">&para;</a></h1>
 <p>How to do the common jobs with the driver: identify, read, command, tare, set up a bus and handle errors.</p>
 <p>Every snippet on this page is compiled by the host CI from
-<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/06f883e1ee49734c3b2e87129fa5b37482802428/tests/docs/api_tasks.cpp"><code>tests/docs/api_tasks.cpp</code></a>, with <code>Driver</code> standing for
+<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/34fc0e5370fb23cf6ad53034bb6feac8afb98efb/tests/docs/api_tasks.cpp"><code>tests/docs/api_tasks.cpp</code></a>, with <code>Driver</code> standing for
 <code>alicat_basis2::Driver&lt;MyUart&gt;</code> and <code>al</code> for <code>alicat_basis2</code>. The <a href="../api-reference/">API reference</a> lists every
 member.</p>
 <h2 id="the-shape-of-the-api">The shape of the API<a class="headerlink" href="#the-shape-of-the-api" title="Permanent link">&para;</a></h2>
@@ -1478,6 +1478,11 @@ with their scaling. <code>ReadHoldingRegisters()</code> reads up to 32 registers
 <td><code>Timeout</code></td>
 <td>No byte arrived within the timeout</td>
 <td>Wiring, baud rate, address, DE/RE, the timeout</td>
+</tr>
+<tr>
+<td><code>SerialError</code></td>
+<td>The port's <code>write()</code> returned <code>false</code>: the request was not sent, and no reply was awaited (also for a broadcast)</td>
+<td>The UART driver, its TX buffer, the port</td>
 </tr>
 <tr>
 <td><code>InvalidFrame</code></td>

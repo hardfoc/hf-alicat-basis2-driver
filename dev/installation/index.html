@@ -1174,7 +1174,7 @@ still write <code>#include "alicat_basis2.hpp"</code>. The version check accepts
 to a temporary prefix and builds a <code>find_package()</code> consumer on every pull request.</p>
 <h2 id="esp-idf">ESP-IDF<a class="headerlink" href="#esp-idf" title="Permanent link">&para;</a></h2>
 <p>The ESP-IDF component wrapper is
-<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/06f883e1ee49734c3b2e87129fa5b37482802428/examples/esp32/components/hf_alicat_basis2/CMakeLists.txt"><code>examples/esp32/components/hf_alicat_basis2/</code></a>.
+<a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/34fc0e5370fb23cf6ad53034bb6feac8afb98efb/examples/esp32/components/hf_alicat_basis2/CMakeLists.txt"><code>examples/esp32/components/hf_alicat_basis2/</code></a>.
 Copy that folder into your project's <code>components/</code> (or point <code>EXTRA_COMPONENT_DIRS</code> at it) and set the
 <code>HF_ALICAT_BASIS2_ROOT</code> cache variable to the driver checkout; the wrapper stops with a clear message when the
 path is wrong. Your component then declares <code>REQUIRES hf_alicat_basis2</code>.</p>
@@ -1190,17 +1190,17 @@ path is wrong. Your component then declares <code>REQUIRES hf_alicat_basis2</cod
 <tbody>
 <tr>
 <td>Settings</td>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/06f883e1ee49734c3b2e87129fa5b37482802428/cmake/hf_alicat_basis2_build_settings.cmake"><code>cmake/hf_alicat_basis2_build_settings.cmake</code></a></td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/34fc0e5370fb23cf6ad53034bb6feac8afb98efb/cmake/hf_alicat_basis2_build_settings.cmake"><code>cmake/hf_alicat_basis2_build_settings.cmake</code></a></td>
 <td>Target name, include directories, version: the single source of truth</td>
 </tr>
 <tr>
 <td>Library</td>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/06f883e1ee49734c3b2e87129fa5b37482802428/CMakeLists.txt"><code>CMakeLists.txt</code></a></td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/34fc0e5370fb23cf6ad53034bb6feac8afb98efb/CMakeLists.txt"><code>CMakeLists.txt</code></a></td>
 <td><code>INTERFACE</code> target, install rules, package config, host tests</td>
 </tr>
 <tr>
 <td>ESP-IDF</td>
-<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/06f883e1ee49734c3b2e87129fa5b37482802428/examples/esp32/components/hf_alicat_basis2/CMakeLists.txt"><code>examples/esp32/components/hf_alicat_basis2/CMakeLists.txt</code></a></td>
+<td><a href="https://github.com/hardfoc/hf-alicat-basis2-driver/blob/34fc0e5370fb23cf6ad53034bb6feac8afb98efb/examples/esp32/components/hf_alicat_basis2/CMakeLists.txt"><code>examples/esp32/components/hf_alicat_basis2/CMakeLists.txt</code></a></td>
 <td>IDF component wrapper over the same settings</td>
 </tr>
 </tbody>
